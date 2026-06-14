@@ -1,0 +1,928 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#ffffff">
+<title>한국정책연구소 · 실시간 업무 대시보드</title>
+<link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+<link rel="stylesheet" as="style" crossorigin href="https://cdn.jsdelivr.net/gh/orioncactus/pretendard@v1.3.9/dist/web/variable/pretendardvariable-dynamic-subset.min.css">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" type="image/png" href="icon-192.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="K-PRI">
+<meta name="description" content="한국정책연구소 실시간 업무 대시보드">
+<style>
+  :root{
+    --bg:#f6f8fc; --txt:#0f172a; --sub:#475569; --mut:#94a3b8;
+    --glass:#ffffff; --glass2:#f1f5f9;
+    --line:rgba(15,23,42,.09); --line2:rgba(15,23,42,.16);
+    --live:#ef4444; --green:#16a34a; --yellow:#d97706; --hold:#94a3b8; --blue:#2563eb; --purple:#7c3aed;
+    --grad:linear-gradient(135deg,#2563eb 0%,#4f46e5 55%,#7c3aed 100%);
+    --shadow:0 1px 2px rgba(15,23,42,.06), 0 10px 28px -16px rgba(15,23,42,.22);
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html{-webkit-text-size-adjust:100%;}
+  body{margin:0; color:var(--txt); background:var(--bg); overflow-x:hidden;
+    font-family:"Pretendard Variable",Pretendard,-apple-system,BlinkMacSystemFont,"Segoe UI","Apple SD Gothic Neo","Malgun Gothic",sans-serif;
+    padding-bottom:120px; line-height:1.55; letter-spacing:-.2px;}
+  a{color:inherit;}
+  /* 오로라 배경 */
+  .aurora{position:fixed; inset:0; z-index:-2; overflow:hidden; pointer-events:none;}
+  .aurora i{position:absolute; border-radius:50%; filter:blur(72px); opacity:.55;}
+  .aurora .a1{width:65vw;height:65vw;max-width:560px;max-height:560px;background:radial-gradient(circle,#3f63ff,transparent 68%);top:-14vh;left:-12vw;animation:fl1 19s ease-in-out infinite;}
+  .aurora .a2{width:58vw;height:58vw;max-width:520px;max-height:520px;background:radial-gradient(circle,#ff5fae,transparent 68%);bottom:-16vh;right:-14vw;animation:fl2 23s ease-in-out infinite;}
+  .aurora .a3{width:50vw;height:50vw;max-width:440px;max-height:440px;background:radial-gradient(circle,#15d6c4,transparent 68%);top:38vh;left:32vw;opacity:.3;animation:fl3 27s ease-in-out infinite;}
+  .grain{position:fixed; inset:0; z-index:-1; pointer-events:none;
+    background:linear-gradient(180deg,rgba(7,10,24,.45),rgba(7,10,24,.86));}
+  @keyframes fl1{50%{transform:translate(7vw,9vh) scale(1.15);}}
+  @keyframes fl2{50%{transform:translate(-7vw,-6vh) scale(1.12);}}
+  @keyframes fl3{50%{transform:translate(-9vw,7vh) scale(1.22);}}
+  /* 헤더 */
+  header{position:sticky; top:0; z-index:20; backdrop-filter:blur(18px) saturate(140%);
+    -webkit-backdrop-filter:blur(18px) saturate(140%);
+    background:rgba(8,11,26,.62); border-bottom:1px solid var(--line); padding:13px 16px;}
+  .htop{display:flex; align-items:center; gap:10px; max-width:680px; margin:0 auto;}
+  .logo{font-weight:800; font-size:18px; letter-spacing:-.5px; line-height:1.15;
+    background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
+  .logo small{display:block; font-weight:500; font-size:10.5px; letter-spacing:.3px;
+    -webkit-text-fill-color:initial; color:var(--mut); margin-top:2px;}
+  .live-chip{margin-left:auto; display:flex; align-items:center; gap:6px; font-size:10.5px; font-weight:700;
+    color:#8affc4; background:rgba(62,232,148,.12); border:1px solid rgba(62,232,148,.3); padding:5px 10px; border-radius:20px;}
+  .live-chip i{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 8px var(--green);animation:pulse 1.3s infinite;}
+  .inst{margin-left:auto; border:1px solid var(--line2); background:var(--glass2); color:var(--txt);
+    font-size:11px; font-weight:700; padding:6px 11px; border-radius:20px; cursor:pointer;}
+  .inst:active{transform:scale(.95);}
+  .inst+.live-chip{margin-left:8px;}
+  .wrap{max-width:680px; margin:0 auto; padding:18px 16px;}
+  .gen{font-size:11px; color:var(--mut); text-align:right; margin:-6px 0 14px;}
+  .gen b{color:var(--sub);}
+  /* 탭바 (헤더 내부) */
+  .tabs{display:flex; gap:6px; margin-top:11px; overflow-x:auto; -webkit-overflow-scrolling:touch; scrollbar-width:none;}
+  .tabs::-webkit-scrollbar{display:none;}
+  .tb{flex:1; white-space:nowrap; border:1px solid var(--line); background:var(--glass); color:var(--sub);
+    font-size:12.5px; font-weight:700; padding:9px 10px; border-radius:13px; cursor:pointer; transition:transform .15s, background .2s, color .2s;}
+  .tb.on{color:#fff; background:var(--grad); border-color:transparent; box-shadow:0 6px 16px -7px rgba(111,90,255,.7);}
+  .tb:active{transform:scale(.95);}
+  .view{animation:fade .32s ease;}
+  @keyframes fade{from{opacity:0; transform:translateY(7px)}to{opacity:1; transform:none}}
+  .hint{font-size:10px; font-weight:500; color:var(--mut); margin-left:auto;}
+  /* 헤드라인 */
+  .headline{display:flex; align-items:center; gap:11px; margin-top:14px; padding:14px 15px;
+    background:linear-gradient(135deg,rgba(255,90,130,.15),rgba(169,135,255,.1)); border:1px solid rgba(255,90,130,.28);
+    border-radius:16px; font-size:13.5px; font-weight:600; line-height:1.45;}
+  .headline .hl-ic{font-size:22px; flex-shrink:0;}
+  /* 본부 미니 카드 */
+  .hqmini{display:grid; grid-template-columns:repeat(2,1fr); gap:10px;}
+  .hqm{display:flex; align-items:center; gap:11px; padding:13px; cursor:pointer;
+    background:var(--glass); border:1px solid var(--line); border-radius:16px; transition:transform .16s, border-color .16s;}
+  .hqm:active{transform:scale(.97); border-color:var(--line2);}
+  .hqm .ic{font-size:20px; width:40px; height:40px; display:grid; place-items:center; border-radius:12px; border:1px solid var(--line2); flex-shrink:0;}
+  .hqm .t{font-size:12.5px; font-weight:700; line-height:1.2;}
+  .hqm .s{font-size:10.5px; color:var(--green); margin-top:3px;}
+  /* 조직도 트리 */
+  .tree{margin-bottom:8px;}
+  .tree .node{margin:0 auto; max-width:240px; text-align:center; padding:12px 14px; border-radius:15px;
+    background:var(--glass); border:1px solid var(--line2); font-weight:700; font-size:13.5px; box-shadow:var(--shadow);}
+  .tree .node small{display:block; font-weight:500; font-size:10px; color:var(--mut); margin-top:3px;}
+  .tree .node.ceo{background:linear-gradient(135deg,rgba(255,210,74,.22),rgba(255,159,26,.1)); border-color:rgba(255,210,74,.45);}
+  .tree .conn{height:15px; width:2px; background:linear-gradient(var(--line2),var(--line)); margin:0 auto;}
+  .tree .duo{display:flex; gap:10px; justify-content:center;}
+  .tree .duo .node{max-width:none; flex:1;}
+  .tree .hqrow{display:grid; grid-template-columns:repeat(4,1fr); gap:8px; margin-top:2px;}
+  .tree .hqbox{text-align:center; padding:11px 5px; border-radius:14px; cursor:pointer;
+    background:var(--glass); border:1px solid var(--line); transition:transform .15s, border-color .15s;}
+  .tree .hqbox:active{transform:scale(.94); border-color:var(--line2);}
+  .tree .hqbox .e{font-size:20px;}
+  .tree .hqbox .nm{font-size:10px; font-weight:700; margin-top:4px; line-height:1.15;}
+  .tree .hqbox .ct{font-size:9px; color:var(--green); margin-top:3px;}
+  /* 얼굴 아바타 이미지 */
+  .av img{width:100%; height:100%; border-radius:50%; object-fit:cover; display:block;}
+  .npc .av{overflow:hidden;}
+  /* 인물 상세 시트 */
+  .psheet .phead{display:flex; align-items:center; gap:14px;}
+  .psheet .pav{width:60px; height:60px; border-radius:50%; overflow:hidden; flex-shrink:0; display:grid; place-items:center;
+    font-weight:800; font-size:19px; color:#fff; box-shadow:0 4px 16px -4px rgba(0,0,0,.6);}
+  .psheet .pn{font-size:20px; font-weight:800; letter-spacing:-.5px;}
+  .psheet .pr{font-size:12.5px; color:var(--sub); margin-top:3px; line-height:1.45;}
+  .psheet .ptag{display:inline-block; font-size:10.5px; font-weight:700; padding:3px 10px; border-radius:20px; margin-top:8px;
+    background:var(--glass2); border:1px solid var(--line2); color:var(--sub);}
+  .psheet .plabel{font-size:11px; color:var(--mut); font-weight:700; margin:18px 0 9px; letter-spacing:.4px;}
+  .psheet .pj{padding:12px 13px; border-radius:14px; background:var(--glass); border:1px solid var(--line); margin-bottom:8px;}
+  .psheet .pjh{display:flex; align-items:center; gap:8px; font-weight:700; font-size:13.5px;}
+  .psheet .pjbar{height:6px; background:rgba(255,255,255,.07); border-radius:20px; overflow:hidden; margin-top:9px;}
+  .psheet .pjbar i{display:block; height:100%; border-radius:20px;}
+  .psheet .empty{font-size:12.5px; color:var(--mut); padding:6px 0 2px;}
+  /* 글래스 공통 */
+  .glass{background:var(--glass); border:1px solid var(--line); border-radius:18px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:var(--shadow);}
+  /* KPI */
+  .kpis{display:grid; grid-template-columns:repeat(4,1fr); gap:10px; margin-bottom:6px;}
+  .kpi{position:relative; overflow:hidden; padding:15px 8px 13px; text-align:center;
+    background:var(--glass); border:1px solid var(--line); border-radius:18px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:var(--shadow);
+    transition:transform .18s ease, border-color .18s;}
+  .kpi::before{content:""; position:absolute; inset:0 0 auto 0; height:3px; background:var(--grad); opacity:.85;}
+  .kpi:active{transform:translateY(2px) scale(.98);}
+  .kpi .em{font-size:15px; opacity:.9;}
+  .kpi b{display:block; font-size:27px; font-weight:800; letter-spacing:-1.5px; line-height:1.1; margin-top:3px;
+    background:var(--grad); -webkit-background-clip:text; background-clip:text; -webkit-text-fill-color:transparent;}
+  .kpi span{font-size:10.5px; color:var(--sub); font-weight:500;}
+  h2{font-size:12.5px; color:var(--sub); letter-spacing:.4px; margin:26px 0 12px; display:flex; align-items:center; gap:9px; font-weight:700;}
+  h2::before{content:""; width:4px; height:15px; border-radius:4px; background:var(--grad);}
+  /* 신호등 */
+  .dot{display:inline-block; width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .dot.live{background:var(--live); box-shadow:0 0 10px var(--live); animation:pulse 1.3s infinite;}
+  .dot.green{background:var(--green); box-shadow:0 0 8px rgba(62,232,148,.6);}
+  .dot.yellow{background:var(--yellow); box-shadow:0 0 8px rgba(255,210,74,.5);}
+  .dot.hold{background:var(--hold);}
+  @keyframes pulse{0%,100%{opacity:1; transform:scale(1)}50%{opacity:.4; transform:scale(.85)}}
+  /* 우선순위 */
+  .pri{position:relative; overflow:hidden; padding:13px 14px 13px 16px; margin-bottom:9px;
+    display:flex; align-items:center; gap:11px; font-size:13.5px; font-weight:500;
+    background:var(--glass); border:1px solid var(--line); border-radius:15px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px);}
+  .pri::before{content:""; position:absolute; left:0; top:0; bottom:0; width:4px;}
+  .pri.live::before{background:var(--live); box-shadow:0 0 14px var(--live);}
+  .pri.yellow::before{background:var(--yellow);}
+  .pri.green::before{background:var(--green);}
+  .pri .lv{font-size:10.5px; font-weight:700; padding:3px 9px; border-radius:20px; white-space:nowrap;
+    background:var(--glass2); color:var(--sub); border:1px solid var(--line);}
+  /* 프로젝트 카드 */
+  .proj{padding:15px 16px; margin-bottom:11px;
+    background:var(--glass); border:1px solid var(--line); border-radius:18px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:var(--shadow);
+    transition:transform .18s, border-color .18s;}
+  .proj:active{transform:scale(.99); border-color:var(--line2);}
+  .proj .ph{display:flex; align-items:center; gap:9px; margin-bottom:7px; flex-wrap:wrap;}
+  .proj .code{font-size:10.5px; font-weight:800; letter-spacing:.3px; padding:3px 9px; border-radius:8px;
+    color:#cfe0ff; background:linear-gradient(135deg,rgba(111,156,255,.25),rgba(169,135,255,.25)); border:1px solid rgba(111,156,255,.35);}
+  .proj .tt{font-weight:700; font-size:15.5px; letter-spacing:-.3px;}
+  .proj .hq{margin-left:auto; font-size:10.5px; color:var(--mut); background:var(--glass2); padding:3px 9px; border-radius:20px; border:1px solid var(--line);}
+  .proj .note{font-size:12.5px; color:var(--sub); margin:5px 0 11px; line-height:1.5;}
+  .barwrap{display:flex; align-items:center; gap:10px;}
+  .bar{flex:1; height:8px; background:rgba(255,255,255,.07); border-radius:20px; overflow:hidden;}
+  .bar i{display:block; height:100%; border-radius:20px; position:relative; overflow:hidden;}
+  .bar i::after{content:""; position:absolute; inset:0; background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);
+    transform:translateX(-100%); animation:shimmer 2.4s infinite;}
+  @keyframes shimmer{100%{transform:translateX(100%)}}
+  .pct{font-size:11.5px; font-weight:800; color:var(--sub); min-width:34px; text-align:right;}
+  .owners{margin-top:11px; display:flex; flex-wrap:wrap; gap:6px;}
+  .own{font-size:11px; padding:4px 10px; border-radius:20px; background:var(--glass2); color:var(--sub); border:1px solid var(--line);}
+  /* 본부 (조직도) */
+  .hq{margin-bottom:11px; overflow:hidden;
+    background:var(--glass); border:1px solid var(--line); border-radius:18px;
+    backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); box-shadow:var(--shadow);}
+  .hq>summary{list-style:none; cursor:pointer; padding:15px; display:flex; align-items:center; gap:13px;}
+  .hq>summary::-webkit-details-marker{display:none;}
+  .hq .ic{font-size:23px; width:46px; height:46px; display:grid; place-items:center; border-radius:14px;
+    border:1px solid var(--line2); position:relative;}
+  .hq .nm{font-weight:700; font-size:15px; letter-spacing:-.3px;}
+  .hq .ms{font-size:11px; color:var(--mut); margin-top:3px; line-height:1.4;}
+  .hq .cnt{margin-left:auto; text-align:right; font-size:10px; color:var(--green); white-space:nowrap;}
+  .hq .cnt b{display:block; font-size:20px; font-weight:800; color:var(--txt); letter-spacing:-1px;}
+  .hq .chev{margin-left:6px; color:var(--mut); transition:transform .25s; font-size:12px;}
+  .hq[open] .chev{transform:rotate(90deg);}
+  .hq[open]{border-color:var(--line2);}
+  .hqbody{padding:2px 14px 15px;}
+  .team{margin-top:11px;}
+  .team .tname{font-size:10.5px; color:var(--mut); margin-bottom:8px; letter-spacing:.5px; font-weight:700;
+    border-top:1px solid var(--line); padding-top:11px; text-transform:uppercase;}
+  .npc{display:flex; align-items:center; gap:11px; padding:9px 10px; border-radius:13px; margin-bottom:6px;
+    background:rgba(255,255,255,.03); border:1px solid transparent; transition:background .15s, border-color .15s;}
+  .npc .av{width:34px; height:34px; border-radius:50%; display:grid; place-items:center; font-size:12px; font-weight:800;
+    flex-shrink:0; color:#fff; box-shadow:0 3px 10px -3px rgba(0,0,0,.6); position:relative;}
+  .npc .av::after{content:""; position:absolute; inset:-2px; border-radius:50%; border:1.5px solid rgba(255,255,255,.18);}
+  .npc .info{min-width:0; flex:1;}
+  .npc .n{font-size:13.5px; font-weight:600; letter-spacing:-.2px;}
+  .npc .r{font-size:11px; color:var(--sub); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:1px;}
+  .npc .st{font-size:9.5px; font-weight:700; padding:3px 8px; border-radius:20px; white-space:nowrap; border:1px solid transparent;}
+  .st.lead{background:rgba(111,156,255,.16); color:#aec6ff; border-color:rgba(111,156,255,.3);}
+  .st.active{background:rgba(62,232,148,.14); color:#7ff0b6; border-color:rgba(62,232,148,.28);}
+  .st.standby{background:rgba(124,137,181,.12); color:#9aa6d6;}
+  .npc.tap{cursor:pointer;}
+  .npc.tap:active{background:var(--glass2); border-color:var(--line2);}
+  /* 활동 피드 */
+  .feed{position:relative; padding-left:20px;}
+  .feed::before{content:""; position:absolute; left:5px; top:6px; bottom:6px; width:2px;
+    background:linear-gradient(180deg,var(--blue),var(--purple),transparent);}
+  .ev{position:relative; margin-bottom:15px;}
+  .ev::before{content:""; position:absolute; left:-18px; top:4px; width:10px; height:10px; border-radius:50%;
+    background:var(--blue); border:2px solid var(--bg); box-shadow:0 0 8px rgba(111,156,255,.7);}
+  .ev .d{font-size:10.5px; color:var(--blue); font-weight:800; letter-spacing:.3px;}
+  .ev .t{font-size:13px; color:var(--txt); margin-top:2px; line-height:1.5;}
+  footer{text-align:center; color:var(--mut); font-size:11px; padding:26px 0 8px; line-height:1.7;}
+  /* FAB + 모달 */
+  .fab{position:fixed; right:16px; bottom:22px; z-index:30; color:#fff; border:none; border-radius:30px;
+    padding:16px 24px; font-size:15px; font-weight:800; letter-spacing:-.3px; cursor:pointer;
+    background:var(--grad); box-shadow:0 10px 30px -6px rgba(111,90,255,.6), 0 0 0 1px rgba(255,255,255,.12) inset;
+    display:flex; align-items:center; gap:8px; animation:bob 3s ease-in-out infinite;}
+  .fab:active{transform:scale(.95);}
+  @keyframes bob{50%{transform:translateY(-4px)}}
+  .modal{position:fixed; inset:0; z-index:40; background:rgba(4,7,18,.6); backdrop-filter:blur(6px);
+    display:none; align-items:flex-end; justify-content:center;}
+  .modal.on{display:flex;}
+  .sheet{width:100%; max-width:680px; border-radius:26px 26px 0 0; border:1px solid var(--line2);
+    background:rgba(16,20,40,.92); backdrop-filter:blur(24px); -webkit-backdrop-filter:blur(24px);
+    padding:14px 18px calc(22px + env(safe-area-inset-bottom)); animation:up .28s cubic-bezier(.2,.8,.2,1);
+    box-shadow:0 -20px 50px -10px rgba(0,0,0,.6);}
+  .grip{width:42px; height:5px; border-radius:10px; background:var(--line2); margin:0 auto 14px;}
+  @keyframes up{from{transform:translateY(100%)}to{transform:translateY(0)}}
+  .sheet h3{margin:0 0 4px; font-size:18px; letter-spacing:-.4px;}
+  .sheet p{margin:0 0 6px; font-size:12px; color:var(--sub); line-height:1.5;}
+  .sheet label{font-size:11.5px; color:var(--sub); display:block; margin:14px 0 7px; font-weight:600;}
+  .sheet select,.sheet textarea{width:100%; background:rgba(255,255,255,.05); color:var(--txt); border:1px solid var(--line2);
+    border-radius:13px; padding:13px; font-size:14px; font-family:inherit;}
+  .sheet select:focus,.sheet textarea:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(111,156,255,.18);}
+  .sheet textarea{min-height:100px; resize:vertical;}
+  .row{display:flex; gap:9px; margin-top:18px;}
+  .btn{flex:1; border:none; border-radius:14px; padding:15px; font-size:14px; font-weight:800; cursor:pointer; letter-spacing:-.2px;}
+  .btn:active{transform:scale(.97);}
+  .btn.tg{background:linear-gradient(135deg,#2aa9e0,#229ED9); color:#fff; box-shadow:0 8px 20px -8px rgba(34,158,217,.7);}
+  .btn.cp{background:var(--glass2); color:var(--txt); border:1px solid var(--line2);}
+  .btn.x{background:transparent; color:var(--sub); flex:0 0 auto; padding:15px 18px;}
+  .toast{position:fixed; left:50%; bottom:130px; transform:translateX(-50%) translateY(8px); z-index:50;
+    background:rgba(255,255,255,.96); color:#0b1020; padding:11px 20px; border-radius:30px; font-size:13px; font-weight:800;
+    opacity:0; transition:opacity .25s, transform .25s; pointer-events:none; box-shadow:0 10px 30px -8px rgba(0,0,0,.5);}
+  .toast.on{opacity:1; transform:translateX(-50%) translateY(0);}
+  @media (prefers-reduced-motion:reduce){*{animation:none!important;}}
+  /* ===== LIGHT CORPORATE THEME (2026-06-10 리프레시) ===== */
+  .aurora{display:none!important;} .grain{display:none!important;}
+  body{background:linear-gradient(180deg,#fbfcfe 0%,#eef2f8 45%,#fbfcfe 100%); background-attachment:fixed;}
+  header{background:rgba(255,255,255,.85)!important; border-bottom:1px solid var(--line); box-shadow:0 1px 0 rgba(15,23,42,.04);}
+  .logo small{color:var(--mut);}
+  .glass,.kpi,.proj,.pri,.hq,.hqm{background:#fff!important; border-color:var(--line)!important;}
+  .tree .node,.tree .hqbox{background:#fff!important; border-color:var(--line)!important;}
+  .tree .node.ceo{background:linear-gradient(135deg,#eef4ff,#f6f1ff)!important; border-color:#c9d8ff!important;}
+  .tree .conn{background:linear-gradient(var(--line2),var(--line));}
+  .bar,.pjbar{background:rgba(15,23,42,.07)!important;}
+  .npc{background:#fff!important; border:1px solid var(--line)!important;}
+  .npc:nth-child(even){background:#fafbfe!important;}
+  .npc .av::after{border-color:rgba(15,23,42,.10)!important;}
+  .headline{background:linear-gradient(135deg,#eef4ff,#f6f1ff)!important; border-color:#cfdcff!important; color:#1e293b;}
+  .live-chip{color:#15803d!important; background:rgba(22,163,74,.10)!important; border-color:rgba(22,163,74,.28)!important;}
+  .tb{background:#fff; border-color:var(--line); color:var(--sub);}
+  .inst{background:#fff; border-color:var(--line2); color:var(--txt);}
+  .proj .code{color:#1d4ed8!important; background:#eef4ff!important; border-color:#cfdcff!important;}
+  .proj .hq,.own,.pri .lv,.psheet .ptag,.hq .cnt b{background:#f1f5f9; border:1px solid var(--line);}
+  .hq .cnt b{background:none; border:none;}
+  .modal{background:rgba(15,23,42,.32)!important; backdrop-filter:blur(4px);}
+  .sheet{background:#ffffff!important; border:1px solid var(--line2)!important; box-shadow:0 -16px 50px -16px rgba(15,23,42,.25)!important;}
+  .grip{background:var(--line2);}
+  .sheet select,.sheet textarea{background:#f8fafc; color:var(--txt); border-color:var(--line2);}
+  .btn.cp{background:#f1f5f9; color:var(--txt); border:1px solid var(--line2);}
+  .pubbar,#pubbar{color:#15803d;}
+  .ev::before{border-color:#fff;}
+  footer{color:var(--mut);}
+  /* ===== 드릴다운 상세·카테고리 (2026-06-10) ===== */
+  .kpi{cursor:pointer; position:relative;}
+  .kpi::after{content:"›"; position:absolute; right:8px; top:6px; font-size:13px; color:var(--mut); opacity:.55;}
+  .kpihint{font-size:10.5px; color:var(--mut); text-align:center; margin:8px 0 2px; font-weight:500;}
+  /* 프로젝트 카테고리 구역 */
+  .catlabel{display:flex; align-items:center; gap:7px; font-size:13px; font-weight:800; color:var(--sub); margin:20px 0 11px;}
+  .catlabel b{color:var(--txt);}
+  .catlabel.live{color:var(--live);} .catlabel.hold{color:var(--hold);}
+  .catfold{margin:8px 0; border:1px solid var(--line); border-radius:16px; background:#fff; overflow:hidden; box-shadow:var(--shadow);}
+  .catfold>summary{list-style:none; cursor:pointer; padding:14px 16px; font-size:13px; font-weight:800; color:var(--green); display:flex; align-items:center; gap:7px;}
+  .catfold>summary::-webkit-details-marker{display:none;}
+  .catfold>summary b{color:var(--txt);}
+  .catfold .foldhint{margin-left:auto; font-size:11px; font-weight:600; color:var(--mut);}
+  .catfold[open]>summary{border-bottom:1px solid var(--line);}
+  .catfold .innerwrap{padding:12px 12px 4px;}
+  /* 단계 뱃지 */
+  .stage{display:inline-block; font-size:10.5px; font-weight:800; padding:3px 10px; border-radius:20px; border:1px solid transparent; white-space:nowrap;}
+  .prow2{display:flex; align-items:center; gap:8px; margin-top:11px;}
+  .tapmore{margin-left:auto; font-size:11.5px; font-weight:700; color:var(--blue);}
+  .proj{cursor:pointer;}
+  /* 상세 시트 (프로젝트·자동화 공용) */
+  .dsheet h3{margin:2px 0 6px; font-size:18px; letter-spacing:-.4px;}
+  .dhead{display:flex; align-items:center; gap:9px; flex-wrap:wrap;}
+  .dhead h3{margin:0;}
+  .dmeta{display:flex; align-items:center; gap:8px; flex-wrap:wrap; margin:9px 0 11px;}
+  .dhq{font-size:10.5px; color:var(--sub); background:#f1f5f9; border:1px solid var(--line); padding:3px 9px; border-radius:20px;}
+  .dpct{font-size:12.5px; font-weight:800; color:var(--blue);}
+  .dbar{height:8px; background:rgba(15,23,42,.08); border-radius:20px; overflow:hidden; margin-bottom:2px;}
+  .dbar i{display:block; height:100%; border-radius:20px;}
+  .dscroll{max-height:64vh; overflow-y:auto; -webkit-overflow-scrolling:touch;}
+  .dsec{margin-top:16px;}
+  .dlabel{font-size:11px; font-weight:800; color:var(--mut); letter-spacing:.3px; margin-bottom:7px;}
+  .dsec p{margin:0; font-size:13.5px; color:var(--txt); line-height:1.6;}
+  .tline{position:relative; padding-left:16px;}
+  .tline::before{content:""; position:absolute; left:3px; top:6px; bottom:6px; width:2px; background:linear-gradient(180deg,var(--blue),var(--purple));}
+  .tev{position:relative; margin-bottom:12px;}
+  .tev::before{content:""; position:absolute; left:-16px; top:4px; width:8px; height:8px; border-radius:50%; background:var(--blue); border:2px solid #fff; box-shadow:0 0 0 1px var(--line2);}
+  .tev .td{font-size:10.5px; font-weight:800; color:var(--blue); display:block; margin-bottom:1px;}
+  .tev .tx{font-size:13px; color:var(--txt); line-height:1.5;}
+  .nlist{margin:0; padding-left:18px;}
+  .nlist li{font-size:13.5px; color:var(--txt); line-height:1.6; margin-bottom:5px;}
+  /* KPI 시트 목록 */
+  .ksheet{max-height:62vh; overflow-y:auto; -webkit-overflow-scrolling:touch; margin-top:6px;}
+  .kgrp{margin-bottom:13px;}
+  .krow{display:flex; align-items:center; gap:10px; padding:10px 8px; border-radius:12px; cursor:pointer; border:1px solid transparent;}
+  .krow:active{background:#f1f5f9; border-color:var(--line);}
+  .kav{width:30px; height:30px; border-radius:50%; display:grid; place-items:center; font-size:11px; font-weight:800; color:#fff; flex-shrink:0;}
+  .kn{font-size:13.5px; font-weight:700;}
+  .kr{font-size:11px; color:var(--sub); margin-left:auto; text-align:right; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:52%;}
+  /* 검색창 (2026-06-13) */
+  .searchbar{position:relative; margin:2px 0 14px;}
+  .searchbar input{width:100%; padding:13px 15px; font-size:14px; border-radius:14px; border:1px solid var(--line2); background:#fff; color:var(--txt); font-family:inherit; box-shadow:var(--shadow);}
+  .searchbar input:focus{outline:none; border-color:var(--blue); box-shadow:0 0 0 3px rgba(37,99,235,.15);}
+  .qresults{margin-top:8px;}
+  .qres-grp{font-size:10.5px; font-weight:800; color:var(--mut); margin:11px 2px 5px; letter-spacing:.3px;}
+  .qres{display:flex; align-items:center; gap:9px; padding:10px 11px; border:1px solid var(--line); border-radius:11px; background:#fff; margin-bottom:6px; cursor:pointer;}
+  .qres:active{background:#f1f5f9;}
+  .qres .qt{font-size:13px; font-weight:700; min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap;}
+  .qres .qd{font-size:11px; color:var(--sub); margin-left:auto; max-width:46%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; flex-shrink:0;}
+  .qres .qtag{font-size:9.5px; font-weight:800; padding:2px 7px; border-radius:8px; background:#eef4ff; color:#1d4ed8; border:1px solid #cfdcff; flex-shrink:0;}
+  .qempty{font-size:12.5px; color:var(--mut); padding:8px 2px;}
+</style>
+</head>
+<body>
+<div class="aurora"><i class="a1"></i><i class="a2"></i><i class="a3"></i></div>
+<div class="grain"></div>
+<header>
+  <div class="htop">
+    <div class="logo">한국정책연구소<small>실시간 업무 대시보드 · K-PRI Live</small></div>
+    <button class="inst" id="installBtn" onclick="doInstall()" hidden>⬇ 앱 설치</button>
+    <div class="live-chip"><i></i>LIVE</div>
+  </div>
+  <nav class="tabs" id="tabs">
+    <button class="tb on" data-t="sum">📊 요약</button>
+    <button class="tb" data-t="prj">📌 프로젝트</button>
+    <button class="tb" data-t="org">🏢 조직</button>
+    <button class="tb" data-t="act">🕒 활동</button>
+    <button class="tb" data-t="auto">🤖 자동화</button>
+  </nav>
+</header>
+
+<div class="wrap">
+  <div class="gen">갱신 <b id="gen"></b></div>
+  <div class="searchbar">
+    <input id="q" type="search" inputmode="search" autocomplete="off"
+           placeholder="🔍 검색 — 인물·프로젝트·자동화·본부·활동 내용 불러오기"
+           oninput="doSearch(this.value)">
+    <div id="qresults" class="qresults"></div>
+  </div>
+  <div id="pubbar" style="display:none; background:rgba(62,232,148,.1); border:1px solid rgba(62,232,148,.3); color:#8affc4; font-size:11.5px; padding:10px 13px; border-radius:13px; margin-bottom:16px; line-height:1.5;">
+    🔒 공개 안전 버전 — 민감정보(법무 현안 상세·개인정보) 제외. 전체 현황은 대표님 PC 전용판에서 확인.
+  </div>
+
+  <!-- 요약 -->
+  <section class="view" id="v-sum">
+    <div class="kpis">
+      <div class="kpi" onclick="openKpi('npc')"><div class="em">👥</div><b id="k-npc">0</b><span>총 NPC</span></div>
+      <div class="kpi" onclick="openKpi('active')"><div class="em">⚡</div><b id="k-act">0</b><span>활성</span></div>
+      <div class="kpi" onclick="openKpi('hq')"><div class="em">🏢</div><b id="k-hq">0</b><span>본부</span></div>
+      <div class="kpi" onclick="openKpi('prj')"><div class="em">📌</div><b id="k-prj">0</b><span>진행</span></div>
+    </div>
+    <div class="kpihint">카드를 누르면 상세 내역이 열립니다 ›</div>
+    <div id="headline" class="headline"></div>
+    <h2>⚡ 우선순위</h2>
+    <div id="priorities"></div>
+    <h2>🏢 본부 요약 <span class="hint">탭하면 조직으로</span></h2>
+    <div id="hqmini" class="hqmini"></div>
+  </section>
+
+  <!-- 프로젝트 -->
+  <section class="view" id="v-prj" hidden>
+    <h2>📌 진행 프로젝트</h2>
+    <div id="projects"></div>
+  </section>
+
+  <!-- 조직 -->
+  <section class="view" id="v-org" hidden>
+    <h2>🗂️ 조직도</h2>
+    <div id="orgtree" class="tree"></div>
+    <h2>🏢 본부 ▸ 팀 ▸ NPC <span class="hint">탭하면 상세</span></h2>
+    <div id="org"></div>
+  </section>
+
+  <!-- 활동 -->
+  <section class="view" id="v-act" hidden>
+    <h2>🕒 실시간 활동 피드 (작업일지 자동)</h2>
+    <div class="feed" id="feed"></div>
+  </section>
+
+  <!-- 자동화 은하수 -->
+  <section class="view" id="v-auto" hidden>
+    <h2>🤖 자동화 은하수 <span class="hint">노드를 탭하면 정보</span></h2>
+    <div class="glass" style="padding:10px; border-radius:18px;">
+      <canvas id="galaxy" style="width:100%; display:block; border-radius:12px;"></canvas>
+    </div>
+    <div id="autolist" style="margin-top:14px;"></div>
+  </section>
+
+  <footer>
+    윤성수 대표이사 · 일론머스크 총괄본부장<br>
+    <span id="f-npc"></span>명 NPC · <span id="f-hq"></span>本部 · 자동 생성 (build_dashboard.py)
+  </footer>
+</div>
+
+<button class="fab" onclick="openModal()">📲 업무지시</button>
+
+<div class="modal" id="modal" onclick="if(event.target===this)closeModal()">
+  <div class="sheet">
+    <div class="grip"></div>
+    <h3>📲 밖에서 업무지시</h3>
+    <p>대상을 고르고 지시를 적으면 텔레그램 봇으로 전송됩니다 (브리지가 큐 처리).</p>
+    <label>대상 본부 / NPC</label>
+    <select id="target"></select>
+    <label>지시 내용</label>
+    <textarea id="msg" placeholder="예) 수의계약 5건 중 화성동탄 건 내일까지 1쪽 제안서 작성 보고"></textarea>
+    <div class="row">
+      <button class="btn tg" onclick="sendTg()">✈️ 텔레그램 전송</button>
+      <button class="btn cp" onclick="copyMsg()">복사</button>
+      <button class="btn x" onclick="closeModal()">닫기</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="pmodal" onclick="if(event.target===this)closePerson()">
+  <div class="sheet psheet">
+    <div class="grip"></div>
+    <div id="pbody"></div>
+    <div class="row">
+      <button class="btn tg" id="pinstruct">📲 이 담당자에게 지시</button>
+      <button class="btn x" onclick="closePerson()">닫기</button>
+    </div>
+  </div>
+</div>
+<div class="modal" id="dmodal" onclick="if(event.target===this)closeDetail()">
+  <div class="sheet dsheet">
+    <div class="grip"></div>
+    <div id="dbody" class="dscroll"></div>
+    <div class="row" id="drow"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+
+<script>
+const DATA = {"generated": "2026-06-14 19:53 KST", "public": true, "top": {"ceo": {"name": "윤성수", "role": "대표이사 (Owner) · 최종 의사결정", "status": "lead"}, "cos": {"name": "김경수", "role": "기획실장 (Chief of Staff) · 기획조정·대외네트워크·대표 보좌", "status": "lead"}, "coo": {"name": "일론머스크", "role": "CEO · 총괄본부장 · 6본부 통할·10X·전략", "status": "lead"}, "vco": {"name": "짐콜린스", "role": "COO · 부총괄본부장 · 실행·운영·현금KPI·플라이휠 회전", "status": "lead"}}, "hq": [{"id": 1, "name": "수주본부", "en": "Revenue & Deals", "head": "권칠승", "color": "#10b981", "icon": "🤝", "mission": "A축 본업수주 · 발굴→제안→영업→수주→홍보 일원화 (제안실무+전략영업 통합)", "teams": [{"team": "본부 직할", "members": [{"name": "권칠승", "role": "CRO · 수주본부장 · 정책·입법·부처관계·영업총괄", "status": "lead"}, {"name": "윤팀장", "role": "제안총괄 팀장 · 기획·제안서 구조", "status": "active"}, {"name": "윤사원", "role": "제안실무·문서·체크리스트", "status": "active"}, {"name": "나미", "role": "협상·설득·BATNA", "status": "active"}]}, {"team": "제안·계약팀", "members": [{"name": "최이재", "role": "딜 법무·계약·회계·리스크", "status": "active"}]}, {"team": "홍보·언론팀", "members": [{"name": "김건우", "role": "홍보팀장 · PR·SNS·카드뉴스", "status": "active"}, {"name": "한정수", "role": "언론팀장 · 위기PR·데스크라인", "status": "active"}, {"name": "박상민", "role": "정치부 기자 · 4대권력 분석", "status": "active"}, {"name": "유현장", "role": "현장기자 · 탐사·인터뷰", "status": "active"}, {"name": "이재형", "role": "경제부 기자 · 거시·산업·IR", "status": "active"}]}, {"team": "자문", "members": [{"name": "정명근시장", "role": "자치행정 자문", "status": "active"}]}]}, {"id": 2, "name": "지식·인텔본부", "en": "Knowledge & Intelligence", "head": "앨빈토플러", "color": "#22d3ee", "icon": "🔭", "mission": "B축 인텔→기회 · 수집+분석+7단계 연쇄파급 시그널+06시 브리핑+연구용역/정책IP+발굴 공급 (정책연구+정보허브+신산업미래 통합)", "teams": [{"team": "본부 직할", "members": [{"name": "앨빈토플러", "role": "CIO · 지식·인텔본부장 · 미래학·거시전략·정책연구", "status": "lead"}, {"name": "존캠벨교수", "role": "경제·계량·정책 자문", "status": "standby"}]}, {"team": "정보수집팀 (발굴 엔진)", "members": [{"name": "임팩트", "role": "수집총괄 · DB설계·큐레이션", "status": "active"}, {"name": "윤조사", "role": "국내정보 · 뉴스·보도자료·의안", "status": "active"}, {"name": "글로벌", "role": "글로벌정보 · OECD·UN·외신", "status": "active"}, {"name": "통계요원", "role": "통계 · KOSIS·통계청", "status": "active"}, {"name": "법령봇", "role": "법령 · 법령·판례·결정", "status": "active"}, {"name": "학술리", "role": "학술 · 논문·연구보고서", "status": "active"}]}, {"team": "미래학·거시파급", "members": [{"name": "레이커즈와일", "role": "기술미래학·특이점·AI가속", "status": "active"}, {"name": "유발하라리", "role": "문명사·인류 거시흐름", "status": "standby"}, {"name": "자크아탈리", "role": "미래경제·거시전략(佛)", "status": "standby"}]}, {"team": "글로벌 자금·주식", "members": [{"name": "레이달리오", "role": "매크로·부채사이클·자금흐름", "status": "active"}, {"name": "워런버핏", "role": "가치투자·기업 펀더멘털", "status": "standby"}, {"name": "캐시우드", "role": "파괴적 혁신성장주(ARK)", "status": "active"}]}, {"team": "국제·공급망", "members": [{"name": "파리드자카리아", "role": "국제정세 종합분석", "status": "standby"}, {"name": "이언브레머", "role": "정치리스크(유라시아그룹)", "status": "standby"}, {"name": "피터자이한", "role": "지정학·자원·공급망 단절", "status": "active"}, {"name": "욋시셰피", "role": "공급망 회복탄력성·물류(MIT)", "status": "standby"}]}, {"team": "외교·국방", "members": [{"name": "리처드하스", "role": "세계질서·외교(前 CFR)", "status": "standby"}, {"name": "콘돌리자라이스", "role": "외교·안보전략(前 국무)", "status": "standby"}, {"name": "존미어샤이머", "role": "현실주의 국제정치", "status": "standby"}, {"name": "데이비드퍼트레이어스", "role": "군사전략(前 CIA·4성장군)", "status": "standby"}, {"name": "로버트게이츠", "role": "국방정책·방산조달(前 국방)", "status": "active"}]}, {"team": "AI·반도체·항공우주", "members": [{"name": "리사수", "role": "AI반도체·GPU(AMD)", "status": "active"}, {"name": "데미스하사비스", "role": "AGI·AI연구(DeepMind)", "status": "standby"}, {"name": "앤드류응", "role": "AI 산업화·응용·생태계", "status": "standby"}, {"name": "그윈숏웰", "role": "상업우주·발사·위성(SpaceX)", "status": "standby"}, {"name": "피터벡", "role": "소형발사체·위성(Rocket Lab)", "status": "standby"}, {"name": "짐브라이든스타인", "role": "우주정책·생태계(前 NASA)", "status": "standby"}]}]}, {"id": 3, "name": "스튜디오본부", "en": "Content Studio", "head": "미스터비스트", "color": "#f43f5e", "icon": "🎬", "mission": "C축 콘텐츠/IP 자동판매 · @TWC The World's Culture 영상·쇼츠·유튜브(국내+해외)·매일 자동 생산 파이프라인 (스튜디오+미래혁신 콘텐츠 통합)", "teams": [{"team": "본부 직할", "members": [{"name": "미스터비스트", "role": "CCO · 스튜디오본부장 · 유튜브 시청유지·썸네일·패키징", "status": "lead"}, {"name": "조니해리스", "role": "크리에이티브 디렉터 · 세계·문화 비주얼 스토리텔링", "status": "active"}, {"name": "엠마샤버레인", "role": "여성 타깃 크리에이터 · 10~20대 여성 감성·톤", "status": "active"}, {"name": "김은숙작가", "role": "시놉시스 작가 · 감정선·서사·후킹 카피", "status": "active"}, {"name": "피터맥키넌", "role": "영상편집·비주얼 · 컷·B롤·색보정", "status": "active"}, {"name": "비주얼후크", "role": "썸네일·가독성 디자이너 · 0.5초 첫인상·모바일 시인성", "status": "active"}]}, {"team": "성장팀", "members": [{"name": "그로스", "role": "성장해커(신규) · 구독·조회·YPP 진입·국내/해외 동시성장", "status": "active"}]}]}, {"id": 4, "name": "자동화기술본부", "en": "Automation & Tech", "head": "샘알트만", "color": "#ec4899", "icon": "🚀", "mission": "플라이휠 자동화 인프라 · 자비스·MCP·파이프라인 + 실작동 검증/신뢰 (대표 비관여의 핵심 · 미래혁신 AI/자동화 계승)", "teams": [{"team": "본부 직할", "members": [{"name": "샘알트만", "role": "CTO · 자동화기술본부장 · AGI전략·AI안전성·자동화", "status": "lead"}]}, {"team": "AI 인프라팀", "members": [{"name": "젠슨황", "role": "AI인프라 · GPU·CUDA", "status": "standby"}, {"name": "사티아나델라", "role": "엔터프라이즈AI · Copilot·SaaS", "status": "standby"}]}, {"team": "스마트시티·건축팀", "members": [{"name": "정문호박사", "role": "스마트시티·GIS·디지털트윈", "status": "active"}, {"name": "최대호건축박사", "role": "건축·도시·인허가", "status": "standby"}]}, {"team": "검증·신뢰팀", "members": [{"name": "체커", "role": "검증관 QA(신규) · 자동화·보고 실작동 매일 검증·무음실패 차단", "status": "active"}, {"name": "양기동박사", "role": "정보통신산업·시스템 자문", "status": "standby"}]}]}, {"id": 5, "name": "법무·관리본부", "en": "Legal & Management", "head": "정종섭교수", "color": "#8b5cf6", "icon": "⚖️", "mission": "수익 보전·결재 게이트 안전판 · 계약·소송·헌법·행정·형사·디지털증거 + 세무·컴플라이언스 (법무송무+세무 통합·자문단 33명)", "teams": [{"team": "본부장", "members": [{"name": "정종섭교수", "role": "CLO·CFO · 법무·관리본부장 · 헌법·행정·세무·재무총괄", "status": "lead"}]}, {"team": "세무·관리팀", "members": [{"name": "박세무회계사", "role": "세무회계 · 정치자금·법인세·VAT", "status": "active"}]}, {"team": "헌법팀", "members": [{"name": "허영교수", "role": "헌법팀장 · 헌법해석론", "status": "standby"}, {"name": "김철수교수", "role": "기본권론·법치주의", "status": "standby"}, {"name": "송재호교수", "role": "표현·집회의 자유", "status": "standby"}, {"name": "윤미라교수", "role": "평등권·차별금지", "status": "standby"}, {"name": "한지민교수", "role": "사회권·교육권", "status": "standby"}, {"name": "최영희교수", "role": "헌재법·위헌심판", "status": "standby"}]}, {"team": "행정법팀", "members": [{"name": "강동훈교수", "role": "국가배상·손해배상", "status": "standby"}, {"name": "박지영교수", "role": "행정절차·비례성", "status": "standby"}, {"name": "박균성교수", "role": "비례원칙·재량통제", "status": "standby"}, {"name": "박정훈교수", "role": "행정소송·재량일탈", "status": "standby"}]}, {"team": "형사·증거팀", "members": [{"name": "정민호교수", "role": "형사소송·공정재판", "status": "standby"}, {"name": "한수웅교수", "role": "디지털포렌식·영상분석 (P1)", "status": "active"}, {"name": "전원열교수", "role": "영상·디지털증거 (P1)", "status": "active"}, {"name": "박노형교수", "role": "IT법·디지털증거 (P1)", "status": "active"}, {"name": "정동윤교수", "role": "민소·자유심증", "status": "standby"}, {"name": "호문혁교수", "role": "민소·채증법칙", "status": "standby"}, {"name": "양창수교수", "role": "민법·사실인정", "status": "standby"}]}, {"team": "노동팀", "members": [{"name": "이수진교수", "role": "노동법·부당해고", "status": "standby"}]}, {"team": "자문단 — 前 대법관·재판관·학자 (12)", "members": [{"name": "김지형변호사", "role": "前 대법관·노동법", "status": "standby"}, {"name": "박일환대법관", "role": "前 대법관·법원행정처장", "status": "standby"}, {"name": "이공현재판관", "role": "前 헌법재판관", "status": "standby"}, {"name": "김창석대법관", "role": "前 대법관·민사행정", "status": "standby"}, {"name": "김선수대법관", "role": "前 대법관·노동변호사", "status": "standby"}, {"name": "박시환대법관", "role": "前 대법관·인권", "status": "standby"}, {"name": "박상옥대법관", "role": "前 대법관·검사출신", "status": "standby"}, {"name": "김신대법관", "role": "前 대법관·민사", "status": "standby"}, {"name": "강일원재판관", "role": "前 헌법재판관", "status": "standby"}, {"name": "김황식총리", "role": "前 대법관·감사원장·총리", "status": "standby"}, {"name": "박병대대법관", "role": "前 대법관·법원행정처장", "status": "standby"}, {"name": "김재형대법관", "role": "前 대법관·민법권위", "status": "standby"}]}, {"team": "시뮬레이션 자문단 — 現職 봇 (21)", "members": [{"name": "조희대봇", "role": "대법원장 봇", "status": "standby"}, {"name": "노태악봇", "role": "대법관·선거행정", "status": "standby"}, {"name": "이흥구봇", "role": "대법관·노동인권", "status": "standby"}, {"name": "천대엽봇", "role": "대법관·상고심", "status": "standby"}, {"name": "오경미봇", "role": "대법관·인권여성", "status": "standby"}, {"name": "오석준봇", "role": "대법관·민사행정", "status": "standby"}, {"name": "서경환봇", "role": "대법관·도산회생", "status": "standby"}, {"name": "권영준봇", "role": "대법관·민법학자", "status": "standby"}, {"name": "엄상필봇", "role": "대법관·형사", "status": "standby"}, {"name": "신숙희봇", "role": "대법관·가사여성", "status": "standby"}, {"name": "노경필봇", "role": "대법관·조세", "status": "standby"}, {"name": "박영재봇", "role": "대법관·사법행정", "status": "standby"}, {"name": "이숙연봇", "role": "대법관·지식재산", "status": "standby"}, {"name": "마용주봇", "role": "대법관·민형사", "status": "standby"}, {"name": "김형두봇", "role": "헌법재판관·사법행정", "status": "standby"}, {"name": "정정미봇", "role": "헌법재판관·민사", "status": "standby"}, {"name": "정형식봇", "role": "헌법재판관·탄핵주심", "status": "standby"}, {"name": "김복형봇", "role": "헌법재판관·민사헌법", "status": "standby"}, {"name": "조한창봇", "role": "헌법재판관·행정", "status": "standby"}, {"name": "정계선봇", "role": "헌법재판관·인권", "status": "standby"}, {"name": "마은혁봇", "role": "헌법재판관·형사인권", "status": "standby"}]}]}, {"id": 6, "name": "23대 특별본부", "en": "Election Task Force (별개 트랙)", "head": "신용석", "color": "#ef4444", "icon": "🗳️", "mission": "화성을 동탄 23대 출마 준비 (별개 트랙 · 수익 KPI 비적용 · 15개월 로드맵)", "teams": [{"team": "본부 직할", "members": [{"name": "신용석", "role": "특임본부장 · 23대 정치트랙 · 前 민주당 사무처장·선거전략 30년", "status": "lead"}, {"name": "강사무장", "role": "선거사무장 · 5승 무패·화성동탄 정통", "status": "active"}, {"name": "김선거구도", "role": "선거구도 · 갤럽출신·동탄분구 분석", "status": "active"}, {"name": "박매니페스토", "role": "매니페스토 · 공약설계", "status": "active"}, {"name": "이홍보전략", "role": "홍보·SNS · 디지털캠페인", "status": "active"}, {"name": "최조직", "role": "조직 · 풀뿌리·당원·후원회", "status": "active"}]}, {"team": "공직선거법팀", "members": [{"name": "김중선변호사", "role": "공직선거법", "status": "active"}, {"name": "이공선변호사", "role": "공직선거법 소송", "status": "active"}]}]}], "photos": {"일론머스크": "https://upload.wikimedia.org/wikipedia/commons/thumb/f/f4/USAFA_Hosts_Elon_Musk_%28Image_1_of_17%29_%28cropped%29.jpg/330px-USAFA_Hosts_Elon_Musk_%28Image_1_of_17%29_%28cropped%29.jpg", "샘알트만": "https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Sam_Altman_TechCrunch_SF_2019_Day_2_Oct_3_%28cropped%29_%28cropped%29.jpg/330px-Sam_Altman_TechCrunch_SF_2019_Day_2_Oct_3_%28cropped%29_%28cropped%29.jpg", "젠슨황": "https://upload.wikimedia.org/wikipedia/commons/thumb/8/87/Jen-Hsun_Huang_Headshot_%2815313247387%29.jpg/330px-Jen-Hsun_Huang_Headshot_%2815313247387%29.jpg", "사티아나델라": "https://upload.wikimedia.org/wikipedia/commons/thumb/6/6c/Satya_Nadella.jpg/330px-Satya_Nadella.jpg", "짐콜린스": "https://upload.wikimedia.org/wikipedia/commons/thumb/b/b6/Jim_Collins.jpg/330px-Jim_Collins.jpg", "앨빈토플러": "https://upload.wikimedia.org/wikipedia/commons/thumb/e/e1/Alvin_Toffler_02.jpg/330px-Alvin_Toffler_02.jpg", "권칠승": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d7/%EA%B5%AD%ED%9A%8C%EC%9D%98%EC%9B%90_%EA%B6%8C%EC%B9%A0%EC%8A%B9_%ED%94%84%EB%A1%9C%ED%95%84%EC%82%AC%EC%A7%84.jpg/330px-%EA%B5%AD%ED%9A%8C%EC%9D%98%EC%9B%90_%EA%B6%8C%EC%B9%A0%EC%8A%B9_%ED%94%84%EB%A1%9C%ED%95%84%EC%82%AC%EC%A7%84.jpg", "정명근시장": "https://upload.wikimedia.org/wikipedia/commons/thumb/d/d9/%EC%A0%95%EB%AA%85%EA%B7%BC_%EC%8B%9C%EC%9E%A5.jpg/330px-%EC%A0%95%EB%AA%85%EA%B7%BC_%EC%8B%9C%EC%9E%A5.jpg"}, "automations": [{"name": "나라장터 입찰 수집", "sched": "매일 08:00", "status": "on", "desc": "조달청 나라장터 용역 입찰공고를 매일 자동 수집해 대표님 관심 분야만 골라 텔레그램으로 보냅니다. (수집 무중단 영구 가동)", "flow": "조달청 OpenAPI 조회 → 관심키워드 16종 필터 → 중복 제거 → 텔레그램 발송", "output": "텔레그램 입찰공고 알림 (정책연구·연구용역·소상공인·화성/경기 등)", "last": "2시간 전"}, {"name": "아침 인텔리전스 브리핑", "sched": "매일 06:00", "status": "on", "desc": "신산업미래부서가 글로벌 현상의 N차 연쇄파급(풍선효과)을 추적해, 언론보도 前에 한국 산업·주식·조달 기회를 선제 포착합니다.", "flow": "글로벌 뉴스·자금흐름 수집 → 7단계 연쇄파급 분석 → 한국 산업/조달 영향 도출", "output": "텔레그램 아침 인텔리전스 브리핑", "last": "13시간 전"}, {"name": "방산 조달 시그널", "sched": "신규 방산공고 時", "status": "wait", "desc": "방위사업청 신규 발주를 포착해 관련 상장사·조달 흐름 시그널로 변환합니다.", "flow": "방산 공고 감지 → 품목·기업 매핑 → 주식·조달 시그널 도출", "output": "방산 조달 → 주식 시그널 알림", "last": "4일 전"}, {"name": "뉴스종합 브리핑", "sched": "매일 07:00", "status": "on", "desc": "국내·국제 뉴스를 분야별로 모아 매일 아침 핵심만 정리합니다. 화성·동탄·오산 지역과 정치 키워드를 우선합니다.", "flow": "국내5+국제5 RSS 수집 → 6분야 톱5 선별 → 23대 D-Day·지역 우선 정렬", "output": "텔레그램 뉴스종합 브리핑 (6/9 복구·정상 가동)", "last": "12시간 전"}, {"name": "유튜브 콘텐츠 초안", "sched": "매일 09:30·15:30", "status": "on", "desc": "문화·정책 쇼츠 콘텐츠 초안을 자동 생성해 대표님 승인을 요청합니다. (자동화 수익 트랙)", "flow": "주제 선정 → 대본·메타데이터 초안 생성 → 텔레그램 승인요청", "output": "콘텐츠 초안 + 승인요청", "last": "4시간 전"}, {"name": "유튜브 승인 폴러", "sched": "10분마다", "status": "wait", "desc": "대표님의 승인/반려 회신을 10분마다 확인해, 승인된 건을 다음 발행 단계로 넘깁니다.", "flow": "승인 회신 폴링 → 승인 건 발행 파이프라인 투입", "output": "승인 건 발행 처리", "last": "4시간 전"}, {"name": "대시보드 재빌드·배포", "sched": "매일 08/09/17시", "status": "on", "desc": "바로 이 대시보드를 하루 3회 다시 생성해 최신 현황으로 갱신하고, 휴대폰 공개 URL까지 자동 배포합니다.", "flow": "build_dashboard.py 실행 → 전체판·공개판 생성 → GitHub Pages 자동 배포", "output": "대시보드 갱신 + https://seongsooyoon.github.io/kpri-board/", "last": "2시간 전"}, {"name": "화성시 기관장 채용감시", "sched": "매일 09:00", "status": "on", "desc": "화성시 산하 공공기관의 기관장·임원 채용공고를 게시 즉시 포착합니다. (대표님=화성산업진흥원 본부장 출신)", "flow": "화성시청 유관기관 채용공고 스크래핑 → 기관장급 키워드 필터 → 신규만 알림", "output": "텔레그램 기관장 채용 알림", "last": "13시간 전"}, {"name": "텔레그램 AI비서", "sched": "24시간 상시", "status": "wait", "desc": "텔레그램으로 '밖에서 업무지시'를 받는 양방향 비서입니다. /질의=답변, /실행=실제 파일 작성까지 수행합니다.", "flow": "텔레그램 수신 → 큐 적재 → Claude 처리 → 회신", "output": "텔레그램 회신·산출물 (6/8 사고 복구 완료)", "last": "3일 전"}, {"name": "큐 워커", "sched": "24시간 상시", "status": "wait", "desc": "비서가 받은 지시 큐를 순차 처리해 자동으로 회신합니다.", "flow": "큐 폴링 → 작업 수행 → 결과 회신", "output": "자동 회신 처리", "last": "4일 전"}, {"name": "Git 자동동기화", "sched": "5분마다", "status": "on", "desc": "모든 작업 산출물을 5분마다 자동으로 커밋·푸시해 유실을 방지합니다.", "flow": "변경 감지 → 커밋(Auto sync (home)) → 원격 푸시", "output": "GitHub 자동 백업 (무인)", "last": "상시"}], "projects": [{"code": "P4-2", "title": "추미애 경기지사 전달정책 3건", "hq": "정책연구", "rag": "green", "progress": 100, "stage": "종료", "started": "2026-05-29", "note": "추미애 경기지사 당선(54.79%) · 전달정책 3건 전달 완료 (임무 종료)", "timeline": [{"date": "2026-05-29", "text": "추미애 도지사 후보 정책전달식 진행"}, {"date": "2026-06-04", "text": "추미애 경기지사 당선 확정 54.79%"}, {"date": "2026-06-04", "text": "전달정책 3건 자료집(별책 9쪽) 완성 — ①화성순환철도 ②그린벨트·농업진흥구역 합리화 ③광역·급행·공항버스 확대"}, {"date": "2026-06-10", "text": "전달정책 3건 경기도정에 전달 완료 (대표님 확인)"}], "next": ["도정 반영 시 한국정책연구소 정책용역으로 연결 (후속 기회)"], "owners": ["앨빈토플러", "권칠승", "윤팀장"], "category": "완료"}, {"code": "P1", "title": "P1 · 법무 현안", "hq": "법무송무", "rag": "yellow", "progress": 55, "stage": "중간", "started": "진행 중", "note": "진행 중 (상세 비공개)", "timeline": [], "next": [], "owners": ["법무송무 본부"], "category": "진행중"}, {"code": "P2", "title": "수의계약 5건 영업", "hq": "전략영업", "rag": "yellow", "progress": 25, "stage": "착수", "started": "진행 중", "note": "수의계약·연구용역 수주 영업 진행 (상세 비공개)", "timeline": [], "next": [], "owners": ["권칠승", "윤팀장", "나미"], "category": "진행중"}, {"code": "P3", "title": "평가위원·면접위원 신청", "hq": "전략영업", "rag": "yellow", "progress": 50, "stage": "중간", "started": "2026-05-18", "note": "위촉희망사유·표준 이력서 완성 · 그룹A 발송패키지까지 진행 → 가능 권역(서울·경기·인천·천안·청주) 기반 기관 확대·회신 추적 단계. ⚠ 실제 발송(대표님 결재) 미실행이 정체 요인.", "timeline": [{"date": "2026-05-18", "text": "타겟 30개 기관 리스트(4그룹) + 표준 신청서·위촉희망사유 10종 작성"}, {"date": "2026-05-20", "text": "그룹A 10곳 발송패키지(5일 캘린더) 수립"}, {"date": "2026-06-10", "text": "가능 권역 5개 확정 반영 — 서울·경기·인천·천안·청주 (평가위원+면접위원 동시 대상)"}], "next": ["권역별(서울·경기·인천·천안·청주) 평가위원·면접위원 모집기관 리스트 확대", "그룹A~C 신청서 발송 (외부발송=대표님 결재) → 위촉 회신 추적", "위촉 시 평가·면접 수당 = 즉시수익 트랙 가동"], "owners": ["권칠승", "윤사원"], "category": "진행중"}, {"code": "JARVIS", "title": "자비스 음성지휘 시스템", "hq": "미래혁신", "rag": "green", "progress": 100, "stage": "종료", "started": "2026-06-06", "note": "PC 음성비서(오브·STT/TTS·NPC 멀티화자·Gemini 폴백·캘린더 연동) — 1단계 구축 완료 (대표님 완료 확인)", "timeline": [{"date": "2026-06-06", "text": "1단계 구축 완료 (입자 오브·STT/TTS·NPC 카드·WebSocket), 응답속도 4~5초 달성"}, {"date": "2026-06-09", "text": "NPC 멀티화자 음성 + Gemini 폴백 + UI 4종 업그레이드"}, {"date": "2026-06-10", "text": "대표님 완료 확인 → 종료. (선택적 후속: Gemini 로그인·캘린더 활성화 1회, 음성 미세조정)"}], "next": ["[선택] Gemini 로그인 1회·캘린더 API 활성화 1회 (대표님 1클릭)", "[보류] 음성 pitch/rate 미세조정"], "owners": ["샘알트만", "일론머스크"], "category": "완료"}, {"code": "23대", "title": "화성을 동탄 출마 준비", "hq": "23대 특별본부", "rag": "green", "progress": 17, "stage": "착수", "started": "2026-06-02", "note": "※ 수익과 별개 트랙 · 정명근 압승(59.42%)으로 지역 기반 호조 · 15개월 로드맵 가동", "timeline": [{"date": "2026-06-02", "text": "출마지 확정 + 15개월 로드맵(D-365/150/30/14/D-Day) 수립"}, {"date": "2026-06-04", "text": "정명근 화성시장 압승(59.42%)으로 지역 기반 호조"}, {"date": "2026-06-06", "text": "동탄 표심분석 2차(5개동·40투표구 전수): 민주 기초체력 51~53%·크로스오버 +22%p"}], "next": ["풀뿌리 조직화(입주자대표·연합회·봉사단 정통성 활용)", "동탄 맞춤공약 100건 설계"], "owners": ["신용석", "강사무장", "김선거구도", "박매니페스토", "이홍보전략", "최조직"], "category": "진행중"}, {"code": "P4", "title": "정명근 화성시장 캠프 ★당선", "hq": "전략영업", "rag": "green", "progress": 100, "stage": "종료", "started": "2026-04-06", "note": "6/3 정명근 재선 당선 확정 59.42% (2위 33.37%·격차 26%p) · 자원봉사 정책총괄 임무 완수", "timeline": [{"date": "2026-04-06", "text": "정명근 후보 캠프 정책총괄 합류 (자원봉사)"}, {"date": "2026-06-01", "text": "공약 종합백서(50대 공약·시민제안 213건) HWP 완성"}, {"date": "2026-06-03", "text": "정책 종합자료집 조직위 인계본 재편(144쪽)"}, {"date": "2026-06-04", "text": "재선 당선 확정 59.42% (2위 박태경 33.37%, 개표 99.97%)"}], "next": ["캠프 마무리·논공행상 정리", "시정 정책자문·화성시 용역 네트워크로 연결 (→ P2·수의계약)"], "owners": ["권칠승", "김건우", "나미", "정명근시장", "박매니페스토"], "category": "완료"}, {"code": "ELEC", "title": "제9회 지방선거 실시간 대시보드", "hq": "정보허브", "rag": "green", "progress": 100, "stage": "종료", "started": "2026-06-03", "note": "투표일 아침 제작→투표율→출구조사→개표→16곳 확정 풀사이클 완수 · 오보 0건 · GitHub Pages 무인배포", "timeline": [{"date": "2026-06-03", "text": "투표일 아침 제작 → 투표율 실시간 → 출구조사 → 개표"}, {"date": "2026-06-05", "text": "16곳 전원 확정·최종 완전판 (10분 루프 18회 가동 후 종료, 오보 0)"}], "next": ["선거 대시보드 엔진 = 23대 등 차기 선거 재활용 자산화"], "owners": ["일론머스크", "임팩트"], "category": "완료"}, {"code": "SYS", "title": "집PC 마이그레이션", "hq": "총괄", "rag": "green", "progress": 100, "stage": "종료", "started": "2026-06-02", "note": "선거사무소 폐쇄 → 집PC(DESKTOP-H87CHPA) 단독 운영 전환 완료 · 스케줄러·자동동기화 정상화", "timeline": [{"date": "2026-06-02", "text": "마이그레이션 체크리스트·스크립트 작성"}, {"date": "2026-06-06", "text": "집PC 환경 확정 · 스케줄러 4건 수리 · 버그 4건 수정 · git 푸시 복구(64커밋 병합)"}], "next": ["승격 PS 차단 회피(cmd+schtasks) 운영 정착"], "owners": ["일론머스크"], "category": "완료"}, {"code": "P5", "title": "행정사 사무소", "hq": "제안실무", "rag": "hold", "progress": 10, "stage": "보류", "started": "-", "note": "보류 — 네이버 등록 산출물 3종 작성됨 (재개 시 즉시수익 트랙)", "timeline": [], "next": ["대표님 지시 시 재개"], "owners": ["최이재", "김건우"], "category": "보류"}, {"code": "P7", "title": "유학 컨설팅", "hq": "정책연구", "rag": "hold", "progress": 5, "stage": "보류", "started": "-", "note": "보류", "timeline": [], "next": ["대표님 지시 시 재개"], "owners": ["앨빈토플러"], "category": "보류"}], "priorities": [{"level": "긴급", "text": "수의계약·연구용역 수주 영업 가동", "rag": "live", "proj": "P2"}, {"level": "1순위", "text": "법무 현안 진행 관리", "rag": "yellow", "proj": "P1"}, {"level": "2순위", "text": "평가위원·면접위원 신청 — 5개 권역(서울·경기·인천·천안·청주) 기관 확대·발송", "rag": "yellow", "proj": "P3"}, {"level": "상시", "text": "자동화 11종(입찰·채용·뉴스·비서 등) 정상 가동 확인", "rag": "green", "tab": "auto"}, {"level": "완료", "text": "경기도정 정책 제안·선거 지원 완료", "rag": "green", "proj": "P4"}], "activity": [{"date": "2026-06-14", "text": "(미래트렌드 주간보고서 1호 발행): 앨빈토플러 지식·인텔본부장. 2026년 6월 셋째 주 글로벌 미래트렌드 5개(반도체수출통제·디지털정부예산·식량공급망·방위산업·AI행정자동화) K-PRI 7단계 연쇄파급 + 즉시 DO 10개 작성. 발행 완료. 경로"}, {"date": "2026-06-14", "text": "(쇼츠 카덴스 조정 + 토픽 자동생성 + 첫배치 홍보콘텐츠): 대표님 지시 3건. ①유튜브 채널당 오전1·오후1로 축소(면접의신 KPRI-ShortsInterview --n2→--n1, TWC는 이미 1+1) — 스팸위험↓. ②scripts/gen_i"}, {"date": "2026-06-13", "text": "(면접의신 쇼츠 자동화 단기 시행): 대표님 승인(단중장기 로드맵·쇼츠 오전2오후2·월3만 무승인). force-ssl 재로그인 완료(면접의신 확정)→#1 공개전환(youtu.be/D3UK9ERqdAU). 신규 scripts/shorts_intervi"}, {"date": "2026-06-13", "text": "(면접의 신 홍보 단/중/장기 + 운영): 대표님 지시(단중장기 계획→보고→승인후 시행 / 숨고 응대 / 교육날짜 캘린더확인 후 확정 / 월 3만원 이내). reports/면접의신_홍보계획_2026-06-13.md에 §10 단(1개월·≤3만)·중(2~"}, {"date": "2026-06-13", "text": "(면접의 신 채널 토큰 분리 + 비공개 업로드): 대표님 지시(채널별 토큰 분리·TWC 무손상·비공개 테스트). ①yt_login_interview.py 신규(별도 토큰 yt_token_interview.json, prompt=consent 채널선택 "}, {"date": "2026-06-13", "text": "(면접의 신 #1 ElevenLabs 재제작): 대표님 \"ElevenLabs로 음성 다시\". 기존 video_pipeline.py(eleven/clova/edge 지원·타임드자막) 활용. ElevenLabs 계정 음성=영어 프리메이드 21종뿐(한국어 "}, {"date": "2026-06-13", "text": "(면접의 신 #1 영상 제작·발송): 대표님 \"면접 영상 GO\". video_render.py에 채널별 한국어 음성·채널명 모드 추가([VOICE]/[CHANNEL] 태그, ko-KR-InJoonNeural) + 안정화(세그먼트 타임아웃 catch→한"}, {"date": "2026-06-13", "text": "(조직개편 단행 — 일론머스크 총괄, 대표님 전건 승인): 목적(자동수익→자유→출마) 정렬 + 중복 4곳 제거. 9본부→6본부 재편, 116→118명(신규 체커·그로스) 전원 재배정(누락0, build 검증 NPC=118·활성50). 통합내역: ①수주"}, {"date": "2026-06-13", "text": "(오후, 대규모 지시 착수): 대표님 다건 지시 처리. ①뉴스 브리핑 2부제 전면개편(morning_brief_intel) — [1부]정보허브 뉴스정리+🔗기사링크 [2부]신산업미래본부×정책연구(7단계예측+다국적교차검증영한+'이면의이야기·향후방향성')."}, {"date": "2026-06-13", "text": "[일일보고 자동생성 복구] 대표님 지적('보고 파일 없음' 반복). 체계적 디버깅. 근본원인=daily_report.ps1(KPRI-DailyReport-0900/1700, 성공0x0)의 생성단계가 claude -p \"/일일보고\" 세션 의존 → 세션·"}, {"date": "2026-06-11", "text": "(유튜브 실영상 발송·승인플로우 복구): 대표님 \"영상을 봐야 승인하지\" 지시. ①어제 보낸 '반도체 정책영상'은 파이프라인 미경유 글초안이라 영상 부재 확인. ②TWC 파이프라인(content_factory→video_render→send_appro"}, {"date": "2026-06-11", "text": "(오전, 텔레그램 발송 집중): 대표님 연속지시 처리. ①morning_brief_intel.py 06:00 무음크래시 진짜원인 규명·수정 — log()의 print()가 pythonw(stdout=None)에서 즉사(import 아님). if sys"}, {"date": "2026-06-11", "text": "[신산업미래본부 승격+아침보고 원인규명+콘텐츠 2종 제작] 대표님 지시. ①대시보드/CLAUDE.md '신산업미래부서'→'신산업미래본부'(일론머스크 직속 전략담당 보좌기구) 개명. ②아침보고 미실행 진짜원인 로그규명: 6/10·6/11 06:00 정시"}, {"date": "2026-06-10", "text": "(대시보드 추가갱신): 대표님 지시 반영 3건. ①P3 평가위원→'평가위원·면접위원 신청'으로 확장, 가능권역 5개(서울·경기·인천·천안·청주) 타임라인 반영, 진척 50% 유지(실발송=대표님결재 미실행 정체 솔직표기). ②JARVIS 자비스 90%→"}], "stats": {"npc": 118, "active": 50, "hq": 6, "projects": 4}};
+const RAGTXT = {live:"긴급/진행중", green:"가동", yellow:"진행", hold:"보류"};
+const palette = ["#5b8cff","#22c55e","#8b5cf6","#f59e0b","#ec4899","#06b6d4","#ef4444","#14b8a6","#f97316"];
+function colorFor(s){let h=0;for(let i=0;i<s.length;i++)h=s.charCodeAt(i)+((h<<5)-h);return palette[Math.abs(h)%palette.length];}
+function initial(n){return n.replace(/(교수|박사|대법관|재판관|변호사|시장|총리|봇|사무장|팀장|전략)$/,"").slice(0,2);}
+function avatarURL(n){return "https://api.dicebear.com/9.x/avataaars/svg?seed="+encodeURIComponent(n)+"&radius=50";}
+function photoFor(n){return (DATA.photos&&DATA.photos[n])||"";}
+function avatarImg(n){
+  const ini=initial(n).replace(/['\\]/g,"");
+  const real=photoFor(n);
+  const src=real||avatarURL(n);
+  // 실사진 실패 시 아바타로, 아바타도 실패 시 이니셜
+  const fb = real ? `this.onerror=null;this.src='${avatarURL(n)}'` : `this.replaceWith(document.createTextNode('${ini}'))`;
+  return `<img src="${src}" alt="" loading="lazy" onerror="${fb}">`;
+}
+function ragColor(r){return r==="live"?"var(--live)":r==="green"?"var(--green)":r==="yellow"?"var(--yellow)":"var(--hold)";}
+function ragGrad(r){const g={live:"linear-gradient(90deg,#ff5a82,#ff8aa8)",green:"linear-gradient(90deg,#22c98a,#3ee894)",yellow:"linear-gradient(90deg,#f4b740,#ffd24a)",hold:"linear-gradient(90deg,#5b6585,#7c89b5)"};return g[r]||g.hold;}
+
+function render(){
+  document.getElementById("gen").textContent = DATA.generated;
+  if(DATA.public){document.getElementById("pubbar").style.display="block";}
+  document.getElementById("k-npc").textContent = DATA.stats.npc;
+  document.getElementById("k-act").textContent = DATA.stats.active;
+  document.getElementById("k-hq").textContent = DATA.stats.hq;
+  document.getElementById("k-prj").textContent = DATA.stats.projects;
+  document.getElementById("f-npc").textContent = DATA.stats.npc;
+  document.getElementById("f-hq").textContent = DATA.stats.hq;
+
+  // 인덱스: code → project (드릴다운용)
+  window.PROJ = {}; DATA.projects.forEach(p=>{ PROJ[p.code]=p; });
+
+  // 우선순위 (클릭 → 연결 프로젝트/탭)
+  document.getElementById("priorities").innerHTML = DATA.priorities.map(p=>{
+    const click = p.proj ? `onclick="openProject('${p.proj}')"` : p.tab ? `onclick="showTab('${p.tab}')"` : "";
+    const tap = (p.proj||p.tab) ? `<span class="tapmore" style="margin-left:auto">›</span>` : "";
+    const cur = (p.proj||p.tab) ? ` style="cursor:pointer"` : "";
+    return `<div class="pri ${p.rag}" ${click}${cur}><span class="lv">${p.level}</span><span>${p.text}</span>${tap}</div>`;
+  }).join("");
+
+  // 프로젝트 — 3구역(진행중/완료/보류) 분류 + 카드 클릭 → 4단 서사
+  const cats = {"진행중":[], "완료":[], "보류":[]};
+  DATA.projects.forEach(p=>{ (cats[p.category]||cats["진행중"]).push(p); });
+  const projCard = p=>`
+    <div class="proj" onclick="openProject('${p.code}')">
+      <div class="ph"><span class="dot ${p.rag}"></span><span class="code">${p.code}</span>
+        <span class="tt">${p.title}</span><span class="hq">${p.hq}</span></div>
+      <div class="note">${p.note}</div>
+      <div class="barwrap">
+        <div class="bar"><i style="width:${p.progress}%;background:${ragGrad(p.rag)}"></i></div>
+        <span class="pct">${p.progress}%</span>
+      </div>
+      <div class="prow2">${stageBadge(p.stage)}<span class="tapmore">자세히 ›</span></div>
+    </div>`;
+  let projHtml = `<div class="catlabel live">🔴 진행중 <b>${cats["진행중"].length}</b></div>`
+    + cats["진행중"].map(projCard).join("");
+  if(cats["완료"].length){
+    projHtml += `<details class="catfold"><summary>✅ 완료 <b>${cats["완료"].length}</b><span class="foldhint">펼치기 ▾</span></summary>`
+      + `<div class="innerwrap">` + cats["완료"].map(projCard).join("") + `</div></details>`;
+  }
+  if(cats["보류"].length){
+    projHtml += `<div class="catlabel hold">⏸ 보류 <b>${cats["보류"].length}</b></div>`
+      + cats["보류"].map(projCard).join("");
+  }
+  document.getElementById("projects").innerHTML = projHtml;
+
+  // 조직도
+  const top = DATA.top;
+  let orgHtml = `<div class="hq" open style="border-color:rgba(255,255,255,.18)">
+    <div class="hqbody" style="padding-top:15px">
+      <div class="team"><div class="tname" style="border-top:none;padding-top:0">최고 의사결정</div>
+      <div class="npc"><div class="av" style="background:linear-gradient(135deg,#ffd24a,#ff9f1a);color:#1a1300">👑</div>
+        <div class="info"><div class="n">${top.ceo.name}</div><div class="r">${top.ceo.role}</div></div>
+        <span class="st lead">최종결재</span></div>
+      <div class="npc tap" onclick="openPerson('${top.coo.name}')"><div class="av" style="background:linear-gradient(135deg,#6f9cff,#3f63ff)">${avatarImg(top.coo.name)}</div>
+        <div class="info"><div class="n">${top.coo.name}</div><div class="r">${top.coo.role}</div></div>
+        <span class="st lead">총괄</span></div>
+      <div class="npc tap" onclick="openPerson('${top.vco.name}')"><div class="av" style="background:linear-gradient(135deg,#a987ff,#7c5bff)">${avatarImg(top.vco.name)}</div>
+        <div class="info"><div class="n">${top.vco.name}</div><div class="r">${top.vco.role}</div></div>
+        <span class="st lead">부총괄</span></div>
+    </div></div></div>`;
+
+  orgHtml += DATA.hq.map(h=>{
+    const total = h.teams.reduce((a,t)=>a+t.members.length,0);
+    const act = h.teams.reduce((a,t)=>a+t.members.filter(m=>m.status!=="standby").length,0);
+    const body = h.teams.map(t=>`
+      <div class="team"><div class="tname">${t.team}</div>
+        ${t.members.map(m=>`
+          <div class="npc tap" onclick="openPerson('${m.name}')">
+            <div class="av" style="background:linear-gradient(135deg,${colorFor(m.name)},${colorFor(m.name+'_2')})">${avatarImg(m.name)}</div>
+            <div class="info"><div class="n">${m.name}</div><div class="r">${m.role}</div></div>
+            <span class="st ${m.status}">${m.status==="lead"?"책임":m.status==="active"?"활성":"대기"}</span>
+          </div>`).join("")}
+      </div>`).join("");
+    return `<details class="hq" id="hq-${h.id}">
+      <summary>
+        <div class="ic" style="background:linear-gradient(135deg,${h.color}3a,${h.color}10); box-shadow:0 0 18px -4px ${h.color}66">${h.icon}</div>
+        <div><div class="nm">${h.id}本部 · ${h.name}</div><div class="ms">${h.head} · ${h.mission}</div></div>
+        <div class="cnt"><b>${total}</b><span style="color:var(--green)">활성 ${act}</span></div>
+        <div class="chev">▸</div>
+      </summary>
+      <div class="hqbody">${body}</div>
+    </details>`;
+  }).join("");
+  document.getElementById("org").innerHTML = orgHtml;
+
+  // 활동 피드
+  document.getElementById("feed").innerHTML = DATA.activity.map(e=>
+    `<div class="ev"><div class="d">${e.date}</div><div class="t">${e.text}</div></div>`).join("");
+
+  // 헤드라인 (요약 탭)
+  const liveP = DATA.priorities.find(p=>p.rag==="live") || DATA.priorities[0];
+  document.getElementById("headline").innerHTML =
+    `<span class="hl-ic">🚨</span><div>오늘의 핵심 — <b>${liveP.text}</b><br>
+     <span style="color:var(--sub);font-weight:500">진행 ${DATA.stats.projects}건 · 활성 NPC ${DATA.stats.active}명 · 본부 ${DATA.stats.hq}개 가동</span></div>`;
+
+  // 본부 미니 (요약 탭)
+  document.getElementById("hqmini").innerHTML = DATA.hq.map(h=>{
+    const total = h.teams.reduce((a,t)=>a+t.members.length,0);
+    const act = h.teams.reduce((a,t)=>a+t.members.filter(m=>m.status!=="standby").length,0);
+    return `<div class="hqm" onclick="showTab('org');openHQ(${h.id})">
+      <div class="ic" style="background:linear-gradient(135deg,${h.color}3a,${h.color}10)">${h.icon}</div>
+      <div><div class="t">${h.id}本 ${h.name.replace(' 본부','')}</div><div class="s">${act}/${total} 활성</div></div></div>`;
+  }).join("");
+
+  // 조직도 트리 (조직 탭)
+  document.getElementById("orgtree").innerHTML = `
+    <div class="node ceo">${DATA.top.ceo.name}<small>대표이사 · 최종결재</small></div>
+    <div class="conn"></div>
+    <div class="node">${DATA.top.cos.name}<small>기획실장 · Chief of Staff</small></div>
+    <div class="conn"></div>
+    <div class="duo">
+      <div class="node">${DATA.top.coo.name}<small>CEO · 총괄본부장</small></div>
+      <div class="node">${DATA.top.vco.name}<small>COO · 부총괄본부장</small></div>
+    </div>
+    <div class="conn"></div>
+    <div class="hqrow">${DATA.hq.map(h=>{
+      const total = h.teams.reduce((a,t)=>a+t.members.length,0);
+      return `<div class="hqbox" onclick="openHQ(${h.id})"><div class="e">${h.icon}</div>
+        <div class="nm">${h.name.replace(' 본부','')}</div><div class="ct">${h.head} · ${total}명</div></div>`;
+    }).join("")}</div>`;
+
+  // 인물 인덱스 + 담당 프로젝트 맵
+  window.PIDX = {}; window.PMAP = {};
+  [DATA.top.ceo, DATA.top.cos, DATA.top.coo, DATA.top.vco].forEach(t=>{ PIDX[t.name]={role:t.role,status:t.status,hq:"최고위",team:""}; });
+  DATA.hq.forEach(h=>h.teams.forEach(t=>t.members.forEach(m=>{
+    if(!PIDX[m.name]) PIDX[m.name]={role:m.role,status:m.status,hq:h.id+"本部 "+h.name,team:t.team};
+  })));
+  DATA.projects.forEach(p=>p.owners.forEach(o=>{ (PMAP[o]=PMAP[o]||[]).push(p); }));
+
+  // 탭 바인딩
+  document.querySelectorAll(".tb").forEach(b=>b.onclick=()=>showTab(b.dataset.t));
+
+  // 지시 대상 셀렉트
+  const sel = document.getElementById("target");
+  let opts = `<option value="총괄본부장 일론머스크">총괄본부장 (일론머스크)</option>`;
+  DATA.hq.forEach(h=>{
+    opts += `<option value="${h.id}本部 ${h.name} (${h.head})">${h.id}本部 ${h.name} — ${h.head}</option>`;
+  });
+  sel.innerHTML = opts;
+}
+
+function doSearch(q){
+  const box = document.getElementById("qresults");
+  q = (q||"").trim().toLowerCase();
+  if(!q){ box.innerHTML=""; return; }
+  const esc = s => (s||"").replace(/\\/g,"\\\\").replace(/'/g,"\\'");
+  const txt = s => (s||"").replace(/</g,"&lt;");
+  const hit = s => (s||"").toLowerCase().includes(q);
+  const groups = [];
+  // 인물(NPC)
+  const npcs = Object.keys(window.PIDX||{}).filter(n => hit(n) || hit(PIDX[n].role) || hit(PIDX[n].hq));
+  if(npcs.length) groups.push(["👥 인물", npcs.slice(0,15).map(n =>
+    `<div class="qres" onclick="openPerson('${esc(n)}')"><span class="qtag">NPC</span><span class="qt">${txt(n)}</span><span class="qd">${txt(PIDX[n].role)}</span></div>`)]);
+  // 프로젝트
+  const prj = Object.values(window.PROJ||{}).filter(p => hit(p.title)||hit(p.note)||hit(p.code)||hit(p.hq));
+  if(prj.length) groups.push(["📌 프로젝트", prj.map(p =>
+    `<div class="qres" onclick="openProject('${esc(p.code)}')"><span class="qtag">${txt(p.code)}</span><span class="qt">${txt(p.title)}</span><span class="qd">${p.progress}%</span></div>`)]);
+  // 자동화
+  const autos = (DATA.automations||[]).map((a,i)=>({a,i})).filter(x => hit(x.a.name)||hit(x.a.desc)||hit(x.a.flow)||hit(x.a.output));
+  if(autos.length) groups.push(["🤖 자동화", autos.map(x =>
+    `<div class="qres" onclick="openAuto(${x.i})"><span class="qtag">AUTO</span><span class="qt">${txt(x.a.name)}</span><span class="qd">${txt(x.a.sched)}</span></div>`)]);
+  // 본부
+  const hqs = (DATA.hq||[]).filter(h => hit(h.name)||hit(h.mission)||hit(h.head));
+  if(hqs.length) groups.push(["🏢 본부", hqs.map(h =>
+    `<div class="qres" onclick="openHQ(${h.id})"><span class="qtag">本部</span><span class="qt">${h.id}本 ${txt(h.name)}</span><span class="qd">${txt(h.head)}</span></div>`)]);
+  // 활동(작업일지)
+  const acts = (DATA.activity||[]).filter(e => hit(e.text));
+  if(acts.length) groups.push(["🕒 활동", acts.slice(0,10).map(e =>
+    `<div class="qres" onclick="showTab('act')"><span class="qtag">${txt(e.date)}</span><span class="qt" style="font-weight:500;font-size:12px">${txt((e.text||'').slice(0,64))}</span></div>`)]);
+  if(!groups.length){ box.innerHTML = `<div class="qempty">'${txt(q)}' 검색 결과 없음</div>`; return; }
+  box.innerHTML = groups.map(([g,items]) => `<div class="qres-grp">${g} (${items.length})</div>` + items.join("")).join("");
+}
+
+function showTab(t){
+  document.querySelectorAll(".view").forEach(v=>{ v.hidden = (v.id !== "v-"+t); });
+  document.querySelectorAll(".tb").forEach(b=>b.classList.toggle("on", b.dataset.t===t));
+  window.scrollTo(0,0);
+}
+function openHQ(id){
+  showTab("org");
+  const d=document.getElementById("hq-"+id);
+  if(d){ d.open=true; setTimeout(()=>d.scrollIntoView({behavior:"smooth",block:"start"}),60); }
+}
+function openPerson(name){
+  const p = (window.PIDX&&PIDX[name]) || {role:"",status:"standby",hq:"",team:""};
+  const projs = (window.PMAP&&PMAP[name]) || [];
+  const stTxt = p.status==="lead"?"책임":p.status==="active"?"활성":"대기";
+  let html = `<div class="phead">
+      <div class="pav" style="background:linear-gradient(135deg,${colorFor(name)},${colorFor(name+'_2')})">${avatarImg(name)}</div>
+      <div><div class="pn">${name}</div><div class="pr">${p.role||""}</div>
+        <span class="ptag">${p.hq}${p.team?" · "+p.team:""}</span> <span class="ptag">${stTxt}</span></div>
+    </div>
+    <div class="plabel">📋 담당 업무</div>
+    <div class="pr" style="color:var(--txt);font-size:13.5px">${p.role||"—"}</div>
+    <div class="plabel">🔥 현재 업무 진행상황 (${projs.length}건)</div>`;
+  if(projs.length){
+    html += projs.map(pj=>`<div class="pj">
+      <div class="pjh"><span class="dot ${pj.rag}"></span>${pj.code} · ${pj.title}</div>
+      <div class="pr">${pj.note}</div>
+      <div class="pjbar"><i style="width:${pj.progress}%;background:${ragGrad(pj.rag)}"></i></div></div>`).join("");
+  } else {
+    html += `<div class="empty">현재 배정된 진행 프로젝트 없음 — 호출 대기 중</div>`;
+  }
+  document.getElementById("pbody").innerHTML = html;
+  document.getElementById("pinstruct").onclick = ()=>{ closePerson(); quickInstruct(name); };
+  document.getElementById("pmodal").classList.add("on");
+}
+function closePerson(){document.getElementById("pmodal").classList.remove("on");}
+
+// ── 드릴다운 상세 (프로젝트·자동화·KPI) ──────────────────
+const STAGE = {
+  "착수":{c:"#7c3aed",t:"착수"}, "중간":{c:"#2563eb",t:"진행 중간"},
+  "마무리":{c:"#d97706",t:"마무리 단계"}, "종료":{c:"#16a34a",t:"종료·완료"},
+  "보류":{c:"#94a3b8",t:"보류"}
+};
+function stageBadge(s){const x=STAGE[s]||STAGE["중간"];
+  return `<span class="stage" style="background:${x.c}1f;color:${x.c};border:1px solid ${x.c}55">${x.t}</span>`;}
+function closeDetail(){document.getElementById("dmodal").classList.remove("on");}
+
+function openProject(code){
+  const p=(window.PROJ&&PROJ[code]); if(!p)return;
+  let h=`<div class="dhead"><span class="code">${p.code}</span><h3>${p.title}</h3></div>
+    <div class="dmeta">${stageBadge(p.stage)}<span class="dhq">${p.hq}</span><span class="dpct">${p.progress}%</span></div>
+    <div class="dbar"><i style="width:${p.progress}%;background:${ragGrad(p.rag)}"></i></div>
+    <div class="dsec"><div class="dlabel">📌 한 줄 요약</div><p>${p.note}</p></div>`;
+  if(p.started) h+=`<div class="dsec"><div class="dlabel">🚩 시작 시점</div><p>${p.started}</p></div>`;
+  if(p.timeline&&p.timeline.length){
+    h+=`<div class="dsec"><div class="dlabel">🧭 진행 경과 (처음 → 현재)</div><div class="tline">`
+      + p.timeline.map(t=>`<div class="tev"><span class="td">${t.date}</span><span class="tx">${t.text}</span></div>`).join("")
+      + `</div></div>`;
+  }
+  h+=`<div class="dsec"><div class="dlabel">🎯 현재 단계</div><p>${(STAGE[p.stage]||STAGE["중간"]).t} · 진척률 ${p.progress}%</p></div>`;
+  if(p.next&&p.next.length){
+    h+=`<div class="dsec"><div class="dlabel">➡️ 향후 과제</div><ul class="nlist">`
+      + p.next.map(n=>`<li>${n}</li>`).join("") + `</ul></div>`;
+  }
+  h+=`<div class="dsec"><div class="dlabel">👥 담당</div><div class="owners">`
+    + p.owners.map(o=>`<span class="own" onclick="closeDetail();openPerson('${o}')" style="cursor:pointer">${o}</span>`).join("")
+    + `</div></div>`;
+  document.getElementById("dbody").innerHTML=h;
+  const tgt=p.owners[0]||p.hq;
+  document.getElementById("drow").innerHTML=
+    `<button class="btn tg" onclick="closeDetail();quickInstruct('${tgt}')">📲 이 건 지시</button>
+     <button class="btn x" onclick="closeDetail()">닫기</button>`;
+  document.getElementById("dmodal").classList.add("on");
+}
+
+function openAuto(i){
+  const a=DATA.automations[i]; if(!a)return;
+  const on=a.status==="on";
+  const badge=on
+    ? `<span class="stage" style="background:#16a34a1f;color:#16a34a;border:1px solid #16a34a55">● 가동 중</span>`
+    : `<span class="stage" style="background:#94a3b81f;color:#64748b;border:1px solid #94a3b855">대기 / 점검</span>`;
+  let h=`<h3>🤖 ${a.name}</h3>
+    <div class="dmeta">${badge}<span class="dhq">${a.sched}</span></div>
+    <div class="dsec"><div class="dlabel">📌 무슨 일을 하나</div><p>${a.desc||"-"}</p></div>`;
+  if(a.flow)   h+=`<div class="dsec"><div class="dlabel">⚙️ 처리 흐름</div><p>${a.flow}</p></div>`;
+  if(a.output) h+=`<div class="dsec"><div class="dlabel">📤 산출·발송처</div><p>${a.output}</p></div>`;
+  h+=`<div class="dsec"><div class="dlabel">⏱ 마지막 실행</div><p>${a.last||"-"}</p></div>`;
+  document.getElementById("dbody").innerHTML=h;
+  document.getElementById("drow").innerHTML=`<button class="btn x" onclick="closeDetail()" style="flex:1">닫기</button>`;
+  document.getElementById("dmodal").classList.add("on");
+}
+
+function openKpi(which){
+  let title="", body="";
+  if(which==="npc"||which==="active"){
+    const onlyActive=which==="active";
+    title=onlyActive?`⚡ 활성 NPC ${DATA.stats.active}명 — 지금 일하는 인원`:`👥 전체 인원 ${DATA.stats.npc}명`;
+    const groups=[];
+    const tops=[DATA.top.ceo,DATA.top.coo,DATA.top.vco];
+    groups.push({name:"최고 의사결정", members:tops.map(t=>({name:t.name,role:t.role,status:t.status}))});
+    DATA.hq.forEach(h=>{
+      let mem=[]; h.teams.forEach(t=>t.members.forEach(m=>{ if(!onlyActive||m.status!=="standby") mem.push(m); }));
+      const seen=new Set(); mem=mem.filter(m=>!seen.has(m.name)&&seen.add(m.name));
+      if(mem.length) groups.push({name:`${h.id}本 ${h.name.replace(' 본부','')}`, members:mem});
+    });
+    body=groups.map(g=>`<div class="kgrp"><div class="dlabel">${g.name} · ${g.members.length}명</div>`
+      + g.members.map(m=>`<div class="krow" onclick="closeDetail();openPerson('${m.name}')">
+          <span class="kav" style="background:linear-gradient(135deg,${colorFor(m.name)},${colorFor(m.name+'_2')})">${initial(m.name)}</span>
+          <span class="kn">${m.name}</span><span class="kr">${m.role||""}</span></div>`).join("")
+      + `</div>`).join("");
+  } else if(which==="hq"){
+    title=`🏢 본부 ${DATA.stats.hq}개`;
+    body=DATA.hq.map(h=>{
+      const total=h.teams.reduce((a,t)=>a+t.members.length,0);
+      const act=h.teams.reduce((a,t)=>a+t.members.filter(m=>m.status!=="standby").length,0);
+      return `<div class="krow" onclick="closeDetail();openHQ(${h.id})">
+        <span class="kav" style="background:linear-gradient(135deg,${h.color},${h.color}aa)">${h.icon}</span>
+        <span class="kn">${h.id}本 ${h.name.replace(' 본부','')}</span>
+        <span class="kr">${h.head} · 활성 ${act}/${total}</span></div>`;
+    }).join("");
+  } else if(which==="prj"){
+    const ip=DATA.projects.filter(p=>p.category==="진행중");
+    title=`📌 진행중 프로젝트 ${ip.length}건`;
+    body=ip.map(p=>`<div class="krow" onclick="closeDetail();openProject('${p.code}')">
+      <span class="dot ${p.rag}" style="margin:0 2px"></span>
+      <span class="kn">${p.code} · ${p.title}</span>
+      <span class="kr">${(STAGE[p.stage]||STAGE["중간"]).t} ${p.progress}%</span></div>`).join("");
+  }
+  document.getElementById("dbody").innerHTML=`<h3>${title}</h3><div class="ksheet">${body}</div>`;
+  document.getElementById("drow").innerHTML=`<button class="btn x" onclick="closeDetail()" style="flex:1">닫기</button>`;
+  document.getElementById("dmodal").classList.add("on");
+}
+
+function openModal(){document.getElementById("modal").classList.add("on");}
+function closeModal(){document.getElementById("modal").classList.remove("on");}
+function quickInstruct(name){
+  openModal();
+  const sel=document.getElementById("target");
+  for(const o of sel.options){if(o.value.includes(name)){o.selected=true;break;}}
+  // NPC 직접 지정 옵션 추가
+  let exists=false; for(const o of sel.options){if(o.value==="@"+name){exists=true;o.selected=true;}}
+  if(!exists){const o=document.createElement("option");o.value="@"+name;o.textContent="@ "+name+" (직접)";sel.insertBefore(o,sel.firstChild);o.selected=true;}
+  document.getElementById("msg").focus();
+}
+function buildText(){
+  const t=document.getElementById("target").value;
+  const m=document.getElementById("msg").value.trim();
+  if(!m){showToast("지시 내용을 입력하세요");return null;}
+  return `[업무지시] ${t}\n${m}\n— 윤성수 대표 (대시보드)`;
+}
+function sendTg(){
+  const text=buildText(); if(!text)return;
+  const url="https://t.me/share/url?url="+encodeURIComponent("한국정책연구소 업무지시")+"&text="+encodeURIComponent(text);
+  window.open(url,"_blank");
+  showToast("텔레그램 공유창 — 봇 채팅 선택");
+}
+function copyMsg(){
+  const text=buildText(); if(!text)return;
+  navigator.clipboard.writeText(text).then(()=>showToast("복사됨 — 텔레그램에 붙여넣기"),()=>showToast("복사 실패"));
+}
+let tmo;
+function showToast(s){const e=document.getElementById("toast");e.textContent=s;e.classList.add("on");clearTimeout(tmo);tmo=setTimeout(()=>e.classList.remove("on"),2200);}
+
+render();
+
+// ── 자동화 은하수 (canvas) ──────────────────────────────
+let GX = null;
+function initGalaxy(){
+  const cv = document.getElementById("galaxy");
+  if(!cv) return;
+  const wrapW = cv.parentElement.clientWidth - 20;
+  const W = Math.max(300, wrapW), H = 430;
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = W*dpr; cv.height = H*dpr; cv.style.height = H+"px";
+  const ctx = cv.getContext("2d"); ctx.scale(dpr, dpr);
+  const cx = W/2, cy = H/2 - 14;
+  const autos = DATA.automations || [];
+  const R = Math.min(W, H)/2 - 58;
+  const nodes = autos.map((a,i)=>{
+    const ang = (i/autos.length)*Math.PI*2 - Math.PI/2;
+    return {...a, ang, r: R, x:0, y:0, pulse: Math.random()*6.28};
+  });
+  // NPC 먼지 (89명)
+  const dust = [];
+  for(let i=0; i<(DATA.stats.npc||89); i++){
+    dust.push({ang: Math.random()*6.28, r: R*(0.45+Math.random()*0.95),
+               sp: 0.0006+Math.random()*0.0014, s: Math.random()<0.4?1.7:1.1});
+  }
+  const colOf = s => s==="on" ? "#3ee894" : s==="wait" ? "#ffd24a" : "#6f9cff";
+  let t = 0;
+  function frame(){
+    if(document.getElementById("v-auto").hidden){ GX=null; return; }
+    t++;
+    ctx.clearRect(0,0,W,H);
+    dust.forEach(d=>{
+      d.ang += d.sp;
+      ctx.beginPath();
+      ctx.arc(cx+Math.cos(d.ang)*d.r*1.04, cy+Math.sin(d.ang)*d.r*0.62, d.s, 0, 7);
+      ctx.fillStyle = "rgba(166,180,224,.45)"; ctx.fill();
+    });
+    nodes.forEach(n=>{
+      n.x = cx + Math.cos(n.ang)*n.r;
+      n.y = cy + Math.sin(n.ang)*n.r*0.62;
+      const g = ctx.createLinearGradient(cx,cy,n.x,n.y);
+      g.addColorStop(0,"rgba(111,156,255,.30)"); g.addColorStop(1, colOf(n.status)+"66");
+      ctx.strokeStyle = g; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(cx,cy); ctx.lineTo(n.x,n.y); ctx.stroke();
+    });
+    const coreR = 24 + Math.sin(t*0.05)*2;
+    const cg = ctx.createRadialGradient(cx,cy,4,cx,cy,coreR+20);
+    cg.addColorStop(0,"#a987ff"); cg.addColorStop(1,"rgba(169,135,255,0)");
+    ctx.fillStyle = cg; ctx.beginPath(); ctx.arc(cx,cy,coreR+20,0,7); ctx.fill();
+    ctx.fillStyle = "#fff"; ctx.font = "800 13px sans-serif"; ctx.textAlign = "center";
+    ctx.fillText("K-PRI", cx, cy+4);
+    ctx.font = "600 9.5px sans-serif";
+    nodes.forEach(n=>{
+      const pr = 7 + Math.sin(t*0.06 + n.pulse)*1.5;
+      const ng = ctx.createRadialGradient(n.x,n.y,1,n.x,n.y,pr+10);
+      ng.addColorStop(0, colOf(n.status)); ng.addColorStop(1, colOf(n.status)+"00");
+      ctx.fillStyle = ng; ctx.beginPath(); ctx.arc(n.x,n.y,pr+10,0,7); ctx.fill();
+      ctx.fillStyle = colOf(n.status); ctx.beginPath(); ctx.arc(n.x,n.y,pr*0.55,0,7); ctx.fill();
+      ctx.fillStyle = "rgba(238,242,255,.92)";
+      ctx.fillText(n.name, n.x, n.y + pr + 13);
+    });
+    requestAnimationFrame(frame);
+  }
+  cv.onclick = e=>{
+    const b = cv.getBoundingClientRect();
+    let bi=-1, bd=1e9;
+    nodes.forEach((n,i)=>{ const d=(n.x-(e.clientX-b.left))**2 + (n.y-(e.clientY-b.top))**2; if(d<bd){bd=d; bi=i;} });
+    if(bi>=0 && bd < 1600) openAuto(bi);
+  };
+  // 목록 (클릭 → 상세)
+  document.getElementById("autolist").innerHTML =
+    `<div style="font-size:11px;color:var(--mut);margin-bottom:9px;line-height:1.5">아래는 위 은하수의 각 자동화(동그라미)가 <b>무슨 일을 하는지</b> 설명입니다. 자동화는 진척률(%)이 아니라 <b>가동상태·최근 실행</b>으로 표시됩니다. (%-진척은 프로젝트 탭)</div>` +
+    autos.map((a,i)=>{
+    const on = a.status==="on";
+    const st = on ? "green" : "yellow";
+    const stTxt = on ? "가동중" : "대기/점검";
+    const bar = on ? 100 : 35;
+    return `<div class="glass" onclick="openAuto(${i})" style="cursor:pointer;padding:12px 13px;margin-bottom:9px">
+      <div style="display:flex;align-items:center;gap:8px">
+        <span class="dot ${st}"></span><b style="font-size:13px">${a.name}</b>
+        <span style="margin-left:auto;font-size:10.5px;color:var(--sub)">${stTxt}${a.last?' · '+a.last:''} ›</span></div>
+      <div style="font-size:12px;color:var(--sub);margin-top:6px;line-height:1.5">${a.desc||'(설명 없음)'}</div>
+      ${a.output?`<div style="font-size:10.5px;color:var(--mut);margin-top:5px">⤷ 산출: ${a.output}</div>`:''}
+      <div style="display:flex;align-items:center;gap:7px;margin-top:7px">
+        <div style="flex:1;height:5px;background:rgba(148,163,184,.2);border-radius:20px;overflow:hidden"><i style="display:block;height:100%;width:${bar}%;background:var(--${st});border-radius:20px"></i></div>
+        <span style="font-size:9.5px;color:var(--mut);white-space:nowrap">${a.sched}</span></div>
+    </div>`;
+  }).join("");
+  GX = true;
+  frame();
+}
+const _showTabOrig = showTab;
+showTab = function(t){ _showTabOrig(t); if(t==="auto" && !GX) setTimeout(initGalaxy, 60); };
+window.addEventListener("resize", ()=>{ if(!document.getElementById("v-auto").hidden){ GX=null; setTimeout(initGalaxy, 120); } });
+
+// PWA — 서비스워커 등록 + 설치 버튼
+if("serviceWorker" in navigator){
+  window.addEventListener("load",()=>navigator.serviceWorker.register("sw.js").catch(()=>{}));
+}
+let deferredPrompt=null;
+window.addEventListener("beforeinstallprompt",e=>{
+  e.preventDefault(); deferredPrompt=e;
+  const b=document.getElementById("installBtn"); if(b) b.hidden=false;
+});
+function doInstall(){
+  if(deferredPrompt){ deferredPrompt.prompt(); deferredPrompt.userChoice.finally(()=>{deferredPrompt=null;document.getElementById("installBtn").hidden=true;}); }
+  else { showToast("브라우저 메뉴 → '홈 화면에 추가'로 설치하세요"); }
+}
+window.addEventListener("appinstalled",()=>showToast("앱 설치 완료 🎉"));
+</script>
+</body>
+</html>
