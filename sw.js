@@ -1,5 +1,10 @@
-const C="kpri-2026-08-10_1155_KST";
-const ASSETS=["./","./index.html","./manifest.webmanifest","./icon-192.png","./icon-512.png","./apple-touch-icon.png"];
-self.addEventListener("install",e=>{e.waitUntil(caches.open(C).then(c=>c.addAll(ASSETS)).then(()=>self.skipWaiting()).catch(()=>{}));});
-self.addEventListener("activate",e=>{e.waitUntil(caches.keys().then(ks=>Promise.all(ks.filter(k=>k!==C).map(k=>caches.delete(k)))).then(()=>self.clients.claim()));});
-self.addEventListener("fetch",e=>{const r=e.request;if(r.method!=="GET")return;e.respondWith(caches.match(r).then(cached=>{const net=fetch(r).then(resp=>{if(resp&&resp.status===200){const cp=resp.clone();caches.open(C).then(c=>c.put(r,cp));}return resp;}).catch(()=>cached);return cached||net;}));});
+// kpri-dashboard 폐지 (2026-08-10) — 구 서비스워커 자폭 스크립트.
+// 구형 PWA가 캐시된 옛 화면을 계속 보여주는 것을 막고 새 주소로 넘긴다.
+self.addEventListener('install', e => self.skipWaiting());
+self.addEventListener('activate', e => e.waitUntil((async () => {
+  const keys = await caches.keys();
+  await Promise.all(keys.map(k => caches.delete(k)));
+  await self.registration.unregister();
+  const cs = await self.clients.matchAll({type: 'window'});
+  cs.forEach(c => c.navigate('https://seongsooyoon.github.io/kpri-board/'));
+})()));
